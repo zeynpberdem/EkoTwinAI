@@ -1,3 +1,4 @@
+using EkoTwin.Services;
 using System.ComponentModel.DataAnnotations;
 using EkoTwin.Models;
 
@@ -70,4 +71,15 @@ public record AssessmentSummaryResponse(
     decimal DigitalInfrastructureScore,
     decimal EnergyEfficiencyScore,
     decimal CarbonManagementScore,
-    decimal SupplyChainScore);
+    decimal SupplyChainScore)
+{
+    public static AssessmentSummaryResponse From(Assessment a) => new(
+        a.Id,
+        a.CreatedAt,
+        a.TotalScore,
+        ScoreCalculator.MaturityLevel(a.TotalScore),
+        a.DigitalInfrastructureScore,
+        a.EnergyEfficiencyScore,
+        a.CarbonManagementScore,
+        a.SupplyChainScore);
+}

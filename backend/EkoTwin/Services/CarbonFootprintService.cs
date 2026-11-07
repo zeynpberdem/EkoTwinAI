@@ -21,7 +21,7 @@ public class CarbonFootprintService : ICarbonFootprintService
         "AB'li müşterileriniz CBAM kapsamında ürün başına gömülü emisyon (ton ürün başına t CO2e) isteyecektir. " +
         "Bu kurumsal hesap o çalışmanın veri temelidir; ürün bazlı değer için üretim miktarları ve süreç emisyonları da gerekir.";
 
-    private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
+    private static readonly CultureInfo Turkish = TurkishFormat.Culture;
 
     private readonly AppDbContext _db;
     private readonly TimeProvider _clock;

@@ -40,4 +40,7 @@ public class Company
 
     /// <summary>Firmanın yıllık karbon ayak izi hesapları (bire-çok).</summary>
     public ICollection<CarbonFootprint> CarbonFootprints { get; set; } = new List<CarbonFootprint>();
+
+    /// <summary>Firmanın karbon azaltım hedefi (bire-bir, isteğe bağlı).</summary>
+    public CarbonTarget? CarbonTarget { get; set; }
 }

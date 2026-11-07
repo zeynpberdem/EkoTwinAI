@@ -105,5 +105,21 @@ GET {{host}}/api/companies/{{companyId}}/carbon-footprints
 ### 12) Karbon raporu (10. adımda dönen "id")
 GET {{host}}/api/carbon-footprints/BURAYA-KARBON-ID
 
-### 13) Firmayı sil (DİKKAT: tüm değerlendirmeleri ve karbon kayıtları da silinir)
+### 13) Karbon azaltım hedefi (baz yıl için karbon kaydı olmalı)
+PUT {{host}}/api/companies/{{companyId}}/carbon-target
+Content-Type: application/json
+
+{
+  "baseYear": 2024,
+  "targetYear": 2030,
+  "reductionPercent": 30
+}
+
+### 14) Gelişim özeti (karşılaştırma, öneri takibi, karbon trendi, hedef)
+GET {{host}}/api/companies/{{companyId}}/progress
+
+### 15) İki değerlendirmeyi karşılaştır
+GET {{host}}/api/assessments/BURAYA-DEGERLENDIRME-ID/compare/BURAYA-DIGER-ID
+
+### 16) Firmayı sil (DİKKAT: tüm değerlendirmeleri, karbon kayıtları ve hedefi de silinir)
 DELETE {{host}}/api/companies/{{companyId}}

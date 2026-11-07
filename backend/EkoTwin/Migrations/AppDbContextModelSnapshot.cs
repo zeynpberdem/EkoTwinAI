@@ -286,6 +286,45 @@ namespace EkoTwin.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.CarbonTarget", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<int>("BaseYear")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("ReductionPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<int>("TargetYear")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId")
+                        .IsUnique();
+
+                    b.ToTable("CarbonTargets", t =>
+                        {
+                            t.HasCheckConstraint("CK_CarbonTargets_Percent", "\"ReductionPercent\" > 0 AND \"ReductionPercent\" <= 100");
+
+                            t.HasCheckConstraint("CK_CarbonTargets_Years", "\"TargetYear\" > \"BaseYear\"");
+                        });
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Company", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1095,6 +1134,17 @@ namespace EkoTwin.Migrations
                     b.Navigation("CarbonFootprint");
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.CarbonTarget", b =>
+                {
+                    b.HasOne("EkoTwin.Models.Company", "Company")
+                        .WithOne("CarbonTarget")
+                        .HasForeignKey("EkoTwin.Models.CarbonTarget", "CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Recommendation", b =>
                 {
                     b.HasOne("EkoTwin.Models.Question", "Question")
@@ -1122,6 +1172,8 @@ namespace EkoTwin.Migrations
                     b.Navigation("Assessments");
 
                     b.Navigation("CarbonFootprints");
+
+                    b.Navigation("CarbonTarget");
                 });
 
             modelBuilder.Entity("EkoTwin.Models.Question", b =>

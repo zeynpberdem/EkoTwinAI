@@ -104,15 +104,7 @@ public class AssessmentService : IAssessmentService
             .ToListAsync(ct);
 
         return assessments
-            .Select(a => new AssessmentSummaryResponse(
-                a.Id,
-                a.CreatedAt,
-                a.TotalScore,
-                ScoreCalculator.MaturityLevel(a.TotalScore),
-                a.DigitalInfrastructureScore,
-                a.EnergyEfficiencyScore,
-                a.CarbonManagementScore,
-                a.SupplyChainScore))
+            .Select(AssessmentSummaryResponse.From)
             .ToList();
     }
 

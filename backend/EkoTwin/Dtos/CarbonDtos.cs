@@ -25,7 +25,8 @@ public class CarbonEntryRequest
     public EmissionSource? Source { get; set; }
 
     /// <summary>Yıllık miktar (birimi kaynağa göre: kWh, m³, litre, kg, ton).</summary>
-    [Range(typeof(decimal), "0", "1000000000", ErrorMessage = "Miktar 0 ile 1.000.000.000 arasında olmalıdır.")]
+    [Range(typeof(decimal), "0", "1000000000", ParseLimitsInInvariantCulture = true, ConvertValueInInvariantCulture = true,
+        ErrorMessage = "Miktar 0 ile 1.000.000.000 arasında olmalıdır.")]
     public decimal Quantity { get; set; }
 }
 

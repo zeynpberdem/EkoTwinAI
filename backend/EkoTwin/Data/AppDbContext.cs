@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<EmissionFactor> EmissionFactors => Set<EmissionFactor>();
     public DbSet<CarbonFootprint> CarbonFootprints => Set<CarbonFootprint>();
     public DbSet<CarbonFootprintItem> CarbonFootprintItems => Set<CarbonFootprintItem>();
+    public DbSet<CarbonTarget> CarbonTargets => Set<CarbonTarget>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -220,6 +221,25 @@ public class AppDbContext : DbContext
             entity.HasIndex(i => new { i.CarbonFootprintId, i.Source }).IsUnique();
 
             entity.ToTable(t => t.HasCheckConstraint("CK_CarbonFootprintItems_Quantity", "\"Quantity\" >= 0"));
+        });
+
+        // ---------- CarbonTarget (karbon azaltım hedefi) ----------
+        modelBuilder.Entity<CarbonTarget>(entity =>
+        {
+            entity.Property(t => t.Id).HasDefaultValueSql("uuidv7()");
+            entity.Property(t => t.ReductionPercent).HasPrecision(5, 2);
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_CarbonTargets_Years", "\"TargetYear\" > \"BaseYear\"");
+                t.HasCheckConstraint("CK_CarbonTargets_Percent", "\"ReductionPercent\" > 0 AND \"ReductionPercent\" <= 100");
+            });
+
+            // Company (1) -> CarbonTarget (0..1); firma başına tek hedef, firma silinirse hedef de silinir.
+            entity.HasOne(t => t.Company)
+                  .WithOne(c => c.CarbonTarget)
+                  .HasForeignKey<CarbonTarget>(t => t.CompanyId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

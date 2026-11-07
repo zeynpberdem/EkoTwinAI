@@ -120,6 +120,20 @@ public class CarbonApiTests
         Assert.True(problem.GetProperty("errors").TryGetProperty("Entries", out _));
     }
 
+    /// <summary>Türkçe Windows'ta ondalıklı sayı doğrulaması 500 vermemeli (kültürden bağımsız sınırlar).</summary>
+    [Fact]
+    public async Task OndalikliMiktar_KabulEdilir()
+    {
+        using var factory = new ApiFactory();
+        var client = factory.CreateClientWithDatabase();
+        var companyId = await CreateCompanyAsync(client);
+
+        var response = await client.PostAsJsonAsync($"/api/companies/{companyId}/carbon-footprints",
+            Body(2025, ("Lpg", 1234.5m)));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
     [Fact]
     public async Task FirmaYoksa_404()
     {

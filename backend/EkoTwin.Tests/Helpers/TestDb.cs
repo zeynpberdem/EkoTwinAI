@@ -46,6 +46,36 @@ public static class TestDb
     }
 
     /// <summary>
+    /// Gerçek servis üzerinden değerlendirme kaydeder (skorlar + öneriler) ve tarihini verilen değere ayarlar.
+    /// </summary>
+    public static async Task<Guid> AddAssessmentAsync(AppDbContext db, Guid companyId, Func<int, int> scoreByOrder, DateTime createdAtUtc)
+    {
+        var service = new EkoTwin.Services.AssessmentService(db);
+        var result = await service.CreateAsync(BuildRequest(db, companyId, scoreByOrder));
+
+        var entity = await db.Assessments.SingleAsync(a => a.Id == result.Id);
+        entity.CreatedAt = createdAtUtc;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        return result.Id;
+    }
+
+    /// <summary>Firmaya doğrudan (servis kullanmadan) yıllık karbon kaydı ekler.</summary>
+    public static async Task AddFootprintAsync(AppDbContext db, Guid companyId, int year, decimal totalTonnes, decimal perEmployee = 0m)
+    {
+        db.CarbonFootprints.Add(new CarbonFootprint
+        {
+            CompanyId = companyId,
+            Year = year,
+            Scope1Tonnes = totalTonnes,
+            TotalTonnes = totalTonnes,
+            TonnesPerEmployee = perEmployee
+        });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+    }
+
+    /// <summary>
     /// Soru sırasına (1-16) göre puan veren bir değerlendirme isteği oluşturur.
     /// Örn: scoreByOrder = n => n &lt;= 4 ? 5 : 3
     /// </summary>

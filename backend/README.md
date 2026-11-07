@@ -90,7 +90,7 @@ dotnet run --launch-profile http
 | GET | `/api/companies/{id}` | Tek bir firmayı getirir |
 | POST | `/api/companies` | Firma ekler |
 | PUT | `/api/companies/{id}` | Firmayı günceller (tüm alanlar gönderilir) |
-| DELETE | `/api/companies/{id}` | Firmayı, **tüm değerlendirmelerini ve karbon kayıtlarını** kalıcı olarak siler |
+| DELETE | `/api/companies/{id}` | Firmayı, **tüm değerlendirmelerini, karbon kayıtlarını ve hedefini** kalıcı olarak siler |
 | GET | `/api/companies/{id}/assessments` | Firmanın geçmiş değerlendirmeleri (yeniden eskiye) |
 | POST | `/api/assessments` | 16 yanıtı alır, skorları hesaplar, kaydeder |
 | GET | `/api/assessments/{id}` | Değerlendirme raporu |
@@ -101,6 +101,11 @@ dotnet run --launch-profile http
 | GET | `/api/carbon-footprints/{id}` | Karbon ayak izi raporu |
 | PUT | `/api/carbon-footprints/{id}` | Hesabı yeni değerlerle yeniden yapar |
 | DELETE | `/api/carbon-footprints/{id}` | Karbon kaydını siler |
+| GET | `/api/companies/{id}/progress` | Gelişim özeti: geçmiş, son karşılaştırma, öneri takibi, karbon trendi, hedef |
+| GET | `/api/assessments/{id}/compare/{otherId}` | Aynı firmanın iki değerlendirmesini karşılaştırır |
+| GET | `/api/companies/{id}/carbon-target` | Karbon azaltım hedefi ve ilerlemesi |
+| PUT | `/api/companies/{id}/carbon-target` | Hedefi oluşturur / günceller (firma başına tek hedef) |
+| DELETE | `/api/companies/{id}/carbon-target` | Hedefi siler |
 | GET | `/api/lookups/sectors` | Sektör listesi (değer + Türkçe ad) |
 | GET | `/api/lookups/cbam-product-groups` | CBAM ürün grupları |
 | GET | `/api/lookups/dimensions` | 4 boyut |
@@ -299,6 +304,44 @@ POST /api/companies/{id}/carbon-footprints
 
 Sonuç: Kapsam 1 = 558,726 t, Kapsam 2 = 181,64 t, toplam **740,366 t CO2e**; en büyük kaynak kok kömürü (%65,6).
 
+## Gelişim takibi
+
+"Geçen sefere göre ne değişti? Önerileri yaptık mı? Karbonumuz azalıyor mu?" sorularına cevap verir.
+`GET /api/companies/{id}/progress` tek istekle gelişim sayfasının tüm verisini döner.
+
+**Değerlendirme karşılaştırması** (son iki değerlendirme veya `compare` ile herhangi ikisi)
+- Genel skor ve olgunluk seviyesi değişimi, 4 boyutun değişimi, en çok gelişen / geriye giden boyut
+- Yalnızca puanı değişen sorular (soru numarasıyla eşleşir)
+
+**Öneri takibi (otomatik, firmadan ek bilgi istenmez)**
+
+| Önceki öneri | Durum |
+|---|---|
+| Soru bazlı, yeni yanıt ≥ 3 | İyileşti |
+| Boyut bazlı, yeni boyut skoru ≥ 50 | İyileşti |
+| Koşul devam ediyor | Hâlâ açık |
+| Önceki raporda yoktu, bu sefer çıktı | Yeni (bir alan gerilemiş) |
+
+Eşikler öneri motorunun tetikleme eşikleriyle aynıdır. A3'teki öneri snapshot'ı sayesinde
+"geçen sefer size şu önerilmişti" bilgisi şablonlar değişse bile korunur.
+
+**Karbon trendi ve hedef**
+- Yıllara göre seri, ilk yıla (baz) göre toplam ve çalışan başına değişim
+- Hedef: baz yıl + hedef yıl + azaltma yüzdesi (baz yıl için karbon kaydı olmalı)
+
+| Hesap | Formül |
+|---|---|
+| Hedef emisyon | Baz × (1 − hedef % / 100) |
+| Gerçekleşen azalma | (Baz − son yıl) / Baz × 100 |
+| Beklenen azalma | Hedef % × geçen yıl / toplam süre (doğrusal yol) |
+| Durum | Ulaşıldı · Yolunda (gerçekleşen ≥ beklenen) · Geride |
+| Tahmini yıl | Bugüne kadarki yıllık ortalama hızla hedefin tamamlanacağı yıl |
+
+**Özet maddeleri:** Sade dilde 3-7 madde (skor değişimi, seviye, en çok gelişen/geriye giden boyut,
+öneri takibi, 180 günü geçen değerlendirme için yenileme hatırlatması, karbon değişimi, hedef durumu).
+
+Kurallar: [`ProgressAnalyzer.cs`](EkoTwin/Services/ProgressAnalyzer.cs), [`CarbonTargetEvaluator.cs`](EkoTwin/Services/CarbonTargetEvaluator.cs)
+
 ## Testler
 
 `backend` klasöründe:
@@ -317,6 +360,9 @@ dotnet test
 - `CarbonCalculatorTests` – karbon formülü, kapsam ayrımı, faktör değerlerinin IPCC parametrelerinden elle hesapla doğrulanması
 - `CarbonFootprintServiceTests` – kayıt, yıl çakışması, doğrulama, önceki yılla karşılaştırma, faktör snapshot'ı, CBAM notu
 - `CarbonApiTests` – karbon uç noktaları uçtan uca (201/400/404/409)
+- `ProgressServiceTests` – karşılaştırma, otomatik öneri takibi, gelişim özeti, karbon trendi, hedef kuralları
+- `CarbonTargetEvaluatorTests` – hedef durumu (ulaşıldı / yolunda / geride), tahmini yıl, sınır durumlar
+- `ProgressApiTests` – gelişim, karşılaştırma ve hedef uç noktaları uçtan uca
 - `ApiIntegrationTests` – uygulamayı HTTP üzerinden uçtan uca çalıştırır: sağlık kontrolü, CORS,
   hata yanıtları, firma uç noktaları, açılır listeler
 
