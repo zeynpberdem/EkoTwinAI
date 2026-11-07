@@ -79,6 +79,43 @@ public class AssessmentServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_OnerileriUretirKaydederVeRapordaDondurur()
+    {
+        using var db = TestDb.Create();
+        var company = await TestDb.AddCompanyAsync(db);
+        var service = new AssessmentService(db);
+
+        // Enerji (5-8) hepsi 1 → 4 aksiyon + Enerji stratejik uyarısı; diğerleri 4
+        var result = await service.CreateAsync(TestDb.BuildRequest(db, company.Id, n => n is >= 5 and <= 8 ? 1 : 4));
+
+        Assert.Equal(Dimension.EnergyEfficiency, result.Recommendations.BottleneckDimension);
+        Assert.Equal(4, result.Recommendations.Actions.Count);
+        Assert.Equal(3, result.Recommendations.TopActions.Count);
+        Assert.Single(result.Recommendations.StrategicAlerts);
+        Assert.Equal(5, await db.AssessmentRecommendations.CountAsync());
+    }
+
+    [Fact]
+    public async Task OneriSablonuDegisse_EskiRaporDegismez()
+    {
+        using var db = TestDb.Create();
+        var company = await TestDb.AddCompanyAsync(db);
+        var service = new AssessmentService(db);
+
+        var created = await service.CreateAsync(TestDb.BuildRequest(db, company.Id, n => n == 3 ? 1 : 4));
+        var originalTitle = created.Recommendations.Actions.Single().Title;
+
+        // Şablon metni sonradan değiştiriliyor
+        var template = await db.Recommendations.SingleAsync(r => r.Title == originalTitle);
+        template.Title = "YENİ BAŞLIK";
+        await db.SaveChangesAsync();
+
+        var reloaded = await service.GetByIdAsync(created.Id);
+
+        Assert.Equal(originalTitle, reloaded!.Recommendations.Actions.Single().Title);
+    }
+
+    [Fact]
     public async Task CreateAsync_YanitlariSoruSirasinaGoreDondurur()
     {
         using var db = TestDb.Create();

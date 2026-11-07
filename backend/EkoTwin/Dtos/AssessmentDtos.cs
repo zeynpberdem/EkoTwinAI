@@ -58,6 +58,7 @@ public record AssessmentResponse(
     string MaturityLevel,
     IReadOnlyList<DimensionScoreResponse> DimensionScores,
     CbamRiskResponse CbamRisk,
+    RecommendationReportResponse Recommendations,
     IReadOnlyList<AnswerResponse> Answers);
 
 /// <summary>Firmanın geçmiş değerlendirmelerini listelemek için özet.</summary>

@@ -13,6 +13,8 @@ public class AppDbContext : DbContext
     public DbSet<Question> Questions => Set<Question>();
     public DbSet<Assessment> Assessments => Set<Assessment>();
     public DbSet<AssessmentDetail> AssessmentDetails => Set<AssessmentDetail>();
+    public DbSet<Recommendation> Recommendations => Set<Recommendation>();
+    public DbSet<AssessmentRecommendation> AssessmentRecommendations => Set<AssessmentRecommendation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -96,6 +98,65 @@ public class AppDbContext : DbContext
                   .WithMany(q => q.AssessmentDetails)
                   .HasForeignKey(d => d.QuestionId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ---------- Recommendation (öneri kütüphanesi) ----------
+        modelBuilder.Entity<Recommendation>(entity =>
+        {
+            entity.Property(r => r.Id).HasDefaultValueSql("uuidv7()");
+
+            entity.Property(r => r.TriggerType).HasConversion<string>().HasMaxLength(20);
+            entity.Property(r => r.Dimension).HasConversion<string>().HasMaxLength(50);
+            entity.Property(r => r.Priority).HasConversion<string>().HasMaxLength(10);
+            entity.Property(r => r.CostLevel).HasConversion<string>().HasMaxLength(10);
+            entity.Property(r => r.ImpactLevel).HasConversion<string>().HasMaxLength(10);
+            entity.Property(r => r.ImpactType).HasConversion<string>().HasMaxLength(30);
+
+            entity.ToTable(t =>
+            {
+                // Soru bazlıysa yalnızca QuestionId, boyut bazlıysa yalnızca Dimension dolu olmalı.
+                t.HasCheckConstraint("CK_Recommendations_Trigger",
+                    "(\"TriggerType\" = 'Question' AND \"QuestionId\" IS NOT NULL AND \"Dimension\" IS NULL) OR " +
+                    "(\"TriggerType\" = 'Dimension' AND \"Dimension\" IS NOT NULL AND \"QuestionId\" IS NULL)");
+                t.HasCheckConstraint("CK_Recommendations_Duration",
+                    "\"DurationMinMonths\" >= 0 AND \"DurationMinMonths\" <= \"DurationMaxMonths\"");
+            });
+
+            // Öneri şablonu olan soru silinemez.
+            entity.HasOne(r => r.Question)
+                  .WithMany()
+                  .HasForeignKey(r => r.QuestionId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasData(RecommendationSeed.Recommendations);
+        });
+
+        // ---------- AssessmentRecommendation (rapordaki önerilerin kaydı) ----------
+        modelBuilder.Entity<AssessmentRecommendation>(entity =>
+        {
+            entity.Property(r => r.Id).HasDefaultValueSql("uuidv7()");
+
+            entity.Property(r => r.TriggerType).HasConversion<string>().HasMaxLength(20);
+            entity.Property(r => r.Dimension).HasConversion<string>().HasMaxLength(50);
+            entity.Property(r => r.Priority).HasConversion<string>().HasMaxLength(10);
+            entity.Property(r => r.CostLevel).HasConversion<string>().HasMaxLength(10);
+            entity.Property(r => r.ImpactLevel).HasConversion<string>().HasMaxLength(10);
+            entity.Property(r => r.ImpactType).HasConversion<string>().HasMaxLength(30);
+
+            // Assessment (1) -> AssessmentRecommendation (N); değerlendirme silinirse önerileri de silinir.
+            entity.HasOne(r => r.Assessment)
+                  .WithMany(a => a.Recommendations)
+                  .HasForeignKey(r => r.AssessmentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Şablon silinirse kayıt korunur, yalnızca bağlantı boşalır.
+            entity.HasOne<Recommendation>()
+                  .WithMany()
+                  .HasForeignKey(r => r.RecommendationId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            // Bir değerlendirmede aynı şablon bir kez üretilir.
+            entity.HasIndex(r => new { r.AssessmentId, r.RecommendationId }).IsUnique();
         });
     }
 }

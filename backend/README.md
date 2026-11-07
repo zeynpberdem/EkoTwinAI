@@ -94,6 +94,7 @@ dotnet run --launch-profile http
 | GET | `/api/companies/{id}/assessments` | Firmanın geçmiş değerlendirmeleri (yeniden eskiye) |
 | POST | `/api/assessments` | 16 yanıtı alır, skorları hesaplar, kaydeder |
 | GET | `/api/assessments/{id}` | Değerlendirme raporu |
+| GET | `/api/recommendations` | Öneri kütüphanesi (20 şablon) |
 | GET | `/api/lookups/sectors` | Sektör listesi (değer + Türkçe ad) |
 | GET | `/api/lookups/cbam-product-groups` | CBAM ürün grupları |
 | GET | `/api/lookups/dimensions` | 4 boyut |
@@ -167,6 +168,52 @@ Kurallar:
 
 Kurallar tek bir dosyada toplanmıştır: [`EkoTwin/Services/ScoreCalculator.cs`](EkoTwin/Services/ScoreCalculator.cs)
 
+## Öneri motoru
+
+Değerlendirme sonucundan firmaya özel, önceliklendirilmiş öneriler üretir. Her raporda `recommendations` alanı olarak döner:
+
+| Alan | İçerik |
+|---|---|
+| `bottleneckDimension` | En zayıf boyut (darboğaz) |
+| `topActions` | **En acil 3 adım** |
+| `actions` | Tetiklenen tüm somut aksiyonlar (sıralı) |
+| `strategicAlerts` | Boyut bazlı stratejik uyarılar (sıralı) |
+
+### Tetikleme (hibrit)
+
+| Tür | Koşul | Sonuç |
+|---|---|---|
+| Soru bazlı | Soruya 1 veya 2 puan verildi | Somut aksiyon (16 sorunun her birinin bir önerisi var) |
+| Boyut bazlı | Boyut skoru 50'nin altında | Stratejik uyarı (4 boyutun her birinin bir uyarısı var) |
+
+### Aciliyet puanı ve sıralama
+
+| Kriter | Puan |
+|---|---|
+| Etki düzeyi (Düşük / Orta / Yüksek) | +2 / +4 / +6 |
+| Maliyet (Yüksek / Orta / Düşük) | +1 / +2 / +3 |
+| Öncelik (Düşük / Orta / Yüksek) | +0 / +1 / +2 |
+| Ciddiyet: soru 1 puan / 2 puan — boyut skoru < 25 / diğer | +2 / +1 — +2 / +1 |
+| Darboğaz boyutundaysa | +2 |
+| CBAM riski Yüksek ve öneri CBAM ilişkiliyse | +3 (öncelik Yüksek'e çıkar) |
+
+- **En acil 3 adım** en yüksek puanlı 3 *aksiyondan* seçilir (stratejik uyarılar ayrı listelenir).
+- Eşitlikte: daha düşük yanıt/skor → daha düşük maliyet → soru sırası.
+- Her önerinin `reasons` alanı neden o sırada olduğunu açıklar (örn. "Soru 9 yanıtınız: 1/5 · En zayıf boyutunuz: Karbon Yönetimi · CBAM riskiniz yüksek").
+- `cbamNote` yalnızca AB'ye CBAM kapsamında ürün ihraç eden firmalara gösterilir.
+
+### Öneri kütüphanesi
+
+- 20 öneri veritabanında (`Recommendations` tablosu) tutulur; başlangıç içeriği
+  [`EkoTwin/Data/RecommendationSeed.cs`](EkoTwin/Data/RecommendationSeed.cs) dosyasındadır.
+- Her öneride: başlık, gerekçe, öncelik, maliyet, etki düzeyi, etki türü (Hızlı Kazanım / Stratejik Uyum /
+  Uzun Vadeli Verimlilik), süre, isteğe bağlı CBAM notu ve kaynak.
+- Kaynağı gösterilemeyen yüzde/rakam kullanılmaz (testle denetlenir); rakam eklenecekse `Source` alanı doldurulmalıdır.
+- **Raporlar sabitlenir:** üretilen öneriler `AssessmentRecommendations` tablosuna o anki haliyle kaydedilir.
+  Şablon metni sonradan değişse de eski raporlar değişmez.
+
+Kurallar: [`EkoTwin/Services/RecommendationEngine.cs`](EkoTwin/Services/RecommendationEngine.cs)
+
 ## CBAM (SKDM) risk uyarısı
 
 "AB'ye ihracatta Sınırda Karbon Düzenlemesi'ne takılır mıyım?" sorusuna cevap verir.
@@ -207,6 +254,8 @@ dotnet test
 - `CbamRiskEvaluatorTests` – CBAM kapsamı, risk seviyesi sınır değerleri, öneriler
 - `CompanyServiceTests` – firma ekleme, güncelleme, silme, sektör/ad filtresi
 - `GlobalExceptionHandlerTests` – hangi hatanın hangi HTTP koduna dönüştüğü
+- `RecommendationEngineTests` – tetikleme, aciliyet puanı, sıralama, en acil 3 adım, darboğaz ve CBAM etkisi
+- `RecommendationSeedTests` – öneri kütüphanesinin bütünlüğü (her soruya bir öneri, CBAM ifadeleri, kaynaksız yüzde yok)
 - `ApiIntegrationTests` – uygulamayı HTTP üzerinden uçtan uca çalıştırır: sağlık kontrolü, CORS,
   hata yanıtları, firma uç noktaları, açılır listeler
 

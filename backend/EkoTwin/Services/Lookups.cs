@@ -27,5 +27,25 @@ public static class Lookups
 
     public static string DimensionName(Dimension dimension) => ScoreCalculator.DisplayName(dimension);
 
+    public static string LevelName(Level level) => level switch
+    {
+        Level.Low => "Düşük",
+        Level.Medium => "Orta",
+        Level.High => "Yüksek",
+        _ => level.ToString()
+    };
+
+    public static string ImpactTypeName(ImpactType type) => type switch
+    {
+        ImpactType.QuickWin => "Hızlı Kazanım",
+        ImpactType.StrategicCompliance => "Stratejik Uyum",
+        ImpactType.LongTermEfficiency => "Uzun Vadeli Verimlilik",
+        _ => type.ToString()
+    };
+
+    /// <summary>"1-3 ay" veya aynıysa "1 ay".</summary>
+    public static string DurationText(int minMonths, int maxMonths) =>
+        minMonths == maxMonths ? $"{minMonths} ay" : $"{minMonths}-{maxMonths} ay";
+
     public static string CbamProductGroupName(CbamProductGroup group) => CbamRiskEvaluator.DisplayName(group);
 }

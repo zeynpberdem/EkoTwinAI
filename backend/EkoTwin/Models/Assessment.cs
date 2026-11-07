@@ -37,4 +37,7 @@ public class Assessment
 
     /// <summary>Soru bazında verilen yanıtlar.</summary>
     public ICollection<AssessmentDetail> AssessmentDetails { get; set; } = new List<AssessmentDetail>();
+
+    /// <summary>Bu değerlendirmede üretilen öneriler (üretildiği andaki haliyle).</summary>
+    public ICollection<AssessmentRecommendation> Recommendations { get; set; } = new List<AssessmentRecommendation>();
 }

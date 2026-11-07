@@ -17,9 +17,8 @@ public class AssessmentService : IAssessmentService
     public async Task<AssessmentResponse> CreateAsync(CreateAssessmentRequest request, CancellationToken ct = default)
     {
         // 1) Firma var mı?
-        var companyExists = await _db.Companies.AnyAsync(c => c.Id == request.CompanyId, ct);
-        if (!companyExists)
-            throw new KeyNotFoundException($"Firma bulunamadı: {request.CompanyId}");
+        var company = await _db.Companies.AsNoTracking().FirstOrDefaultAsync(c => c.Id == request.CompanyId, ct)
+                      ?? throw new KeyNotFoundException($"Firma bulunamadı: {request.CompanyId}");
 
         // 2) Yanıtlar, aktif soruların tamamını tam olarak bir kez kapsıyor mu?
         var activeQuestions = await _db.Questions
@@ -35,6 +34,27 @@ public class AssessmentService : IAssessmentService
 
         decimal ScoreOf(Dimension d) => scoresByDimension.GetValueOrDefault(d);
 
+        // 4) CBAM riski (öneri önceliklendirmesinde kullanılır)
+        var cbamRisk = CbamRiskEvaluator.Evaluate(
+            company.ExportsToEu, company.CbamProductGroup, ScoreOf(Dimension.CarbonManagement));
+
+        // 5) Öneriler: şablonlardan üret, sırala; değerlendirmeyle birlikte (snapshot) kaydedilir
+        var templates = await _db.Recommendations.AsNoTracking().Where(r => r.IsActive).ToListAsync(ct);
+        var answerInputs = request.Answers
+            .Select(a =>
+            {
+                var q = activeQuestions[a.QuestionId];
+                return new RecommendationEngine.AnswerInput(q.Id, q.DisplayOrder, q.Dimension, a.Score);
+            })
+            .ToList();
+
+        var recommendations = RecommendationEngine.Generate(
+            templates,
+            answerInputs,
+            scoresByDimension,
+            cbamRiskHigh: cbamRisk.RiskLevel == CbamRiskEvaluator.High,
+            showCbamNotes: company.ExportsToEu && company.CbamProductGroup != CbamProductGroup.None);
+
         var assessment = new Assessment
         {
             CompanyId = request.CompanyId,
@@ -46,10 +66,11 @@ public class AssessmentService : IAssessmentService
             TotalScore = ScoreCalculator.TotalScore(scoresByDimension.Values),
             AssessmentDetails = request.Answers
                 .Select(a => new AssessmentDetail { QuestionId = a.QuestionId, Score = a.Score })
-                .ToList()
+                .ToList(),
+            Recommendations = recommendations
         };
 
-        // 4) Değerlendirme + 16 yanıt tek bir işlemde (transaction) kaydedilir.
+        // 6) Değerlendirme + yanıtlar + öneriler tek bir işlemde (transaction) kaydedilir.
         _db.Assessments.Add(assessment);
         await _db.SaveChangesAsync(ct);
 
@@ -60,9 +81,11 @@ public class AssessmentService : IAssessmentService
     {
         var assessment = await _db.Assessments
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(a => a.Company)
             .Include(a => a.AssessmentDetails)
                 .ThenInclude(d => d.Question)
+            .Include(a => a.Recommendations)
             .FirstOrDefaultAsync(a => a.Id == id, ct);
 
         return assessment is null ? null : ToResponse(assessment);
@@ -136,19 +159,21 @@ public class AssessmentService : IAssessmentService
 
     private static AssessmentResponse ToResponse(Assessment a)
     {
-        var dimensionScores = new[]
+        var scores = new Dictionary<Dimension, decimal>
         {
-            (Dimension.DigitalInfrastructure, a.DigitalInfrastructureScore),
-            (Dimension.EnergyEfficiency, a.EnergyEfficiencyScore),
-            (Dimension.CarbonManagement, a.CarbonManagementScore),
-            (Dimension.SupplyChain, a.SupplyChainScore)
-        }
-        .Select(x => new DimensionScoreResponse(
-            x.Item1,
-            ScoreCalculator.DisplayName(x.Item1),
-            x.Item2,
-            ScoreCalculator.MaturityLevel(x.Item2)))
-        .ToList();
+            [Dimension.DigitalInfrastructure] = a.DigitalInfrastructureScore,
+            [Dimension.EnergyEfficiency] = a.EnergyEfficiencyScore,
+            [Dimension.CarbonManagement] = a.CarbonManagementScore,
+            [Dimension.SupplyChain] = a.SupplyChainScore
+        };
+
+        var dimensionScores = scores
+            .Select(kv => new DimensionScoreResponse(
+                kv.Key,
+                ScoreCalculator.DisplayName(kv.Key),
+                kv.Value,
+                ScoreCalculator.MaturityLevel(kv.Value)))
+            .ToList();
 
         var answers = a.AssessmentDetails
             .OrderBy(d => d.Question.DisplayOrder)
@@ -169,6 +194,33 @@ public class AssessmentService : IAssessmentService
             ScoreCalculator.MaturityLevel(a.TotalScore),
             dimensionScores,
             CbamRiskEvaluator.Evaluate(a.Company.ExportsToEu, a.Company.CbamProductGroup, a.CarbonManagementScore),
+            ToRecommendationReport(a.Recommendations, scores),
             answers);
+    }
+
+    private static RecommendationReportResponse ToRecommendationReport(
+        IEnumerable<AssessmentRecommendation> recommendations, IReadOnlyDictionary<Dimension, decimal> scores)
+    {
+        // Rapordaki darboğaz: en düşük skorlu boyut (eşitlikte enum sırasına göre ilki)
+        var bottleneck = RecommendationEngine.FindBottlenecks(scores).OrderBy(d => (int)d).Cast<Dimension?>().FirstOrDefault();
+
+        var actions = recommendations
+            .Where(r => r.TriggerType == RecommendationTrigger.Question)
+            .OrderBy(r => r.Rank)
+            .Select(RecommendationResponse.From)
+            .ToList();
+
+        var strategic = recommendations
+            .Where(r => r.TriggerType == RecommendationTrigger.Dimension)
+            .OrderBy(r => r.Rank)
+            .Select(RecommendationResponse.From)
+            .ToList();
+
+        return new RecommendationReportResponse(
+            bottleneck,
+            bottleneck is { } b ? ScoreCalculator.DisplayName(b) : null,
+            actions.Where(r => r.IsTopPriority).ToList(),
+            actions,
+            strategic);
     }
 }

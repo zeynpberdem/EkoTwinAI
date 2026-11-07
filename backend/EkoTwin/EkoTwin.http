@@ -13,6 +13,9 @@ GET {{host}}/api/lookups/sectors
 ###
 GET {{host}}/api/lookups/cbam-product-groups
 
+### Öneri kütüphanesi (20 şablon)
+GET {{host}}/api/recommendations
+
 ### 2) Soruları getir (16 soru; ID'leri buradan alın)
 GET {{host}}/api/questions
 Accept: application/json

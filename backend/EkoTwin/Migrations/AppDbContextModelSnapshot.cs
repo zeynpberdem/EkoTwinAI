@@ -91,6 +91,99 @@ namespace EkoTwin.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.AssessmentRecommendation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<int?>("AnswerScore")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("AssessmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CbamNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("CostLevel")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Dimension")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("DurationMaxMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DurationMinMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImpactLevel")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("ImpactType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<bool>("IsTopPriority")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int?>("QuestionNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Rank")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Rationale")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Reasons")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("RecommendationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("TriggerType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("UrgencyScore")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecommendationId");
+
+                    b.HasIndex("AssessmentId", "RecommendationId")
+                        .IsUnique();
+
+                    b.ToTable("AssessmentRecommendations");
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Company", b =>
                 {
                     b.Property<Guid>("Id")
@@ -295,6 +388,416 @@ namespace EkoTwin.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.Recommendation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<string>("CbamNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("CbamRelevant")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CostLevel")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Dimension")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("DurationMaxMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DurationMinMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImpactLevel")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("ImpactType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid?>("QuestionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Rationale")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("TriggerType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId");
+
+                    b.ToTable("Recommendations", t =>
+                        {
+                            t.HasCheckConstraint("CK_Recommendations_Duration", "\"DurationMinMonths\" >= 0 AND \"DurationMinMonths\" <= \"DurationMaxMonths\"");
+
+                            t.HasCheckConstraint("CK_Recommendations_Trigger", "(\"TriggerType\" = 'Question' AND \"QuestionId\" IS NOT NULL AND \"Dimension\" IS NULL) OR (\"TriggerType\" = 'Dimension' AND \"Dimension\" IS NOT NULL AND \"QuestionId\" IS NULL)");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000001"),
+                            CbamRelevant = false,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 2,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "High",
+                            ImpactType = "QuickWin",
+                            IsActive = true,
+                            Priority = "High",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000001"),
+                            Rationale = "Satış, stok ve faturaların kâğıt veya dağınık Excel dosyaları yerine tek bir sistemde tutulması veri giriş hatalarını ve stok kayıplarını azaltır, güncel duruma her an erişim sağlar. İleride entegre ERP'ye geçişin ilk adımıdır.",
+                            Title = "Bulut tabanlı ön muhasebe ve stok yazılımına geçiş",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000002"),
+                            CbamRelevant = false,
+                            CostLevel = "Medium",
+                            DurationMaxMonths = 4,
+                            DurationMinMonths = 2,
+                            ImpactLevel = "High",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000002"),
+                            Rationale = "Makine duruşları, çevrim süreleri ve firelerin sensör veya basit veri toplama terminalleriyle anlık izlenmesi üretimdeki darboğazları görünür kılar. Tüm tesis yerine en kritik 1-2 makineyle başlanabilir.",
+                            Title = "Kritik makinelerde dijital üretim takibi",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000003"),
+                            CbamRelevant = false,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 1,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "High",
+                            ImpactType = "QuickWin",
+                            IsActive = true,
+                            Priority = "High",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000003"),
+                            Rationale = "Düzenli ve en az bir kopyası farklı ortamda tutulan yedekleme, güncel güvenlik duvarı ve çok faktörlü kimlik doğrulama; fidye yazılımı gibi saldırılarda veri ve üretim kaybını önler. Kişisel veri işleyen firmalar için KVKK yükümlülükleri açısından da gereklidir.",
+                            Title = "Temel siber güvenlik ve yedekleme paketi",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000004"),
+                            CbamRelevant = false,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 3,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "Medium",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000004"),
+                            Rationale = "Yazılım ve otomasyon yatırımlarının verim getirmesi, çalışanların bu araçları benimsemesine bağlıdır. Kısa, uygulamalı eğitimlerle başlanabilir; kamu ve meslek odası destekli eğitim programları araştırılmalıdır.",
+                            Title = "Çalışanlar için dijital yetkinlik eğitim programı",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000005"),
+                            CbamNote = "CBAM beyanında ürün başına elektrik tüketimi gerekir; hat veya makine bazında ölçüm bu veriyi sağlar.",
+                            CbamRelevant = true,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 2,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "High",
+                            ImpactType = "QuickWin",
+                            IsActive = true,
+                            Priority = "High",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000005"),
+                            Rationale = "Boşta çalışan makineleri, kaçak akımları ve pik saat tüketimini görünür kılar; enerji faturalarında ölçülebilir düşüş sağlar. Diğer tüm enerji verimliliği adımları için gereken verinin temelidir.",
+                            Title = "IoT tabanlı anlık enerji izleme ve sayaç entegrasyonu",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000006"),
+                            CbamRelevant = false,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 2,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "Medium",
+                            ImpactType = "QuickWin",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000006"),
+                            Rationale = "LED aydınlatma, hareket sensörleri ve akıllı termostatlar düşük riskli ve hızlı uygulanabilen yatırımlardır; enerji tüketimini üretimi etkilemeden azaltır.",
+                            Title = "Aydınlatma ve iklimlendirmede verimli ekipmana geçiş",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000007"),
+                            CbamRelevant = false,
+                            CostLevel = "Medium",
+                            DurationMaxMonths = 6,
+                            DurationMinMonths = 3,
+                            ImpactLevel = "High",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000007"),
+                            Rationale = "Basınçlı hava kaçaklarının giderilmesi ile yüksek verimli motor ve hız kontrol cihazı (VFD) kullanımı düşük maliyetli başlangıçlardır. Döküm, fırın ve kurutma süreçlerinde atık ısının ön ısıtmada kullanılması ileri aşama bir adımdır.",
+                            Title = "Basınçlı hava, motor ve atık ısı verimlilik iyileştirmeleri",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000008"),
+                            CbamRelevant = false,
+                            CostLevel = "Medium",
+                            DurationMaxMonths = 3,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "Medium",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000008"),
+                            Rationale = "Yetkili bir enerji verimliliği danışmanlık firmasına yaptırılan etüt, tasarruf fırsatlarını yatırım geri dönüş süreleriyle birlikte önceliklendirir. Verimlilik projelerine yönelik destek başvurularında da temel belge olarak kullanılır.",
+                            Title = "Enerji verimliliği etüdü yaptırılması",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000009"),
+                            CbamNote = "AB'li müşterileriniz CBAM beyanı için ürünlerinizin gömülü emisyon verisini isteyecektir. Veri sunulamazsa yüksek varsayılan değerler uygulanır ve rekabet gücünüz düşer.",
+                            CbamRelevant = true,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 3,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "High",
+                            ImpactType = "StrategicCompliance",
+                            IsActive = true,
+                            Priority = "High",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000009"),
+                            Rationale = "Yakıt, doğalgaz ve elektrik faturalarından yıllık sera gazı emisyonunuzu hesaplamak karbon yönetiminin ilk adımıdır. Resmi emisyon katsayıları ve hesaplama araçlarıyla düşük maliyetle yapılabilir.",
+                            Title = "Kurumsal karbon ayak izi hesabı (Kapsam 1 ve 2)",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000010"),
+                            CbamNote = "CBAM kapsamındaki ürünlerde ürün başına gömülü emisyon hesabı bu çalışmanın temelini oluşturur.",
+                            CbamRelevant = true,
+                            CostLevel = "Medium",
+                            DurationMaxMonths = 6,
+                            DurationMinMonths = 3,
+                            ImpactLevel = "Medium",
+                            ImpactType = "StrategicCompliance",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000010"),
+                            Rationale = "En çok satan ürününüzün yaşam döngüsü boyunca oluşturduğu emisyonu ölçmek; yeşil ürün beyanı, ihale ve müşteri taleplerine cevap verebilmenizi sağlar. Uzmanlık gerektirir; kurumsal hesap yapıldıktan sonra tek bir üründen başlanması önerilir.",
+                            Title = "Ürün bazlı karbon ayak izi (LCA) çalışması",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000011"),
+                            CbamNote = "Ürünlerinizin gömülü emisyonu azaldıkça AB'li müşterinizin CBAM maliyeti, dolayısıyla fiyat rekabetiniz doğrudan iyileşir.",
+                            CbamRelevant = true,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 3,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "Medium",
+                            ImpactType = "StrategicCompliance",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000011"),
+                            Rationale = "Ölçülen emisyonlara dayanan, yıllara yayılmış somut hedefler (enerji verimliliği, yenilenebilir elektrik, yakıt değişimi gibi) yatırımları önceliklendirir ve müşterilere taahhüt olarak sunulabilir.",
+                            Title = "Karbon azaltım hedefi ve yol haritası belirlenmesi",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000012"),
+                            CbamNote = "CBAM kesin dönemi 1 Ocak 2026'da başladı; 2026 ithalatları için ilk yıllık beyan 30 Eylül 2027'dedir. Mevzuat değişebileceği için güncel metin takip edilmelidir.",
+                            CbamRelevant = true,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 2,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "High",
+                            ImpactType = "StrategicCompliance",
+                            IsActive = true,
+                            Priority = "High",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000012"),
+                            Rationale = "Ürünlerinizin AB düzenlemelerinden nasıl etkilendiğini, müşterilerinizin hangi veriyi hangi formatta isteyeceğini ve Türkiye'deki iklim mevzuatındaki gelişmeleri düzenli takip etmek; sürpriz maliyet ve müşteri kaybı riskini azaltır.",
+                            Title = "AB Yeşil Mutabakatı ve SKDM (CBAM) uyum değerlendirmesi",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000013"),
+                            CbamRelevant = false,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 4,
+                            DurationMinMonths = 2,
+                            ImpactLevel = "Medium",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000013"),
+                            Rationale = "Tedarikçi seçiminde fiyat ve kalitenin yanına çevre ve sürdürülebilirlik kriterlerinin eklenmesi, tedarik zincirinden kaynaklanan dolaylı emisyonları (Kapsam 3) düşürür ve yeşil kriter arayan müşteri ve ihalelere erişimi kolaylaştırır.",
+                            Title = "Yeşil tedarikçi değerlendirme kriterlerinin oluşturulması",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000014"),
+                            CbamRelevant = false,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 3,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "Medium",
+                            ImpactType = "QuickWin",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000014"),
+                            Rationale = "Sevkiyatların birleştirilmesi, boş dönüşlerin azaltılması ve rota planlama araçlarının kullanılması yakıt maliyetini ve taşımacılık kaynaklı emisyonları birlikte düşürür.",
+                            Title = "Lojistik planlama ve rota optimizasyonu",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000015"),
+                            CbamRelevant = false,
+                            CostLevel = "Low",
+                            DurationMaxMonths = 6,
+                            DurationMinMonths = 3,
+                            ImpactLevel = "Low",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "Low",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000015"),
+                            Rationale = "Aynı il veya OSB'deki tedarikçilere öncelik vermek taşıma mesafesini ve teslim sürelerini kısaltır, tedarik kesintisi riskini azaltır. Karar verilirken fiyat ve kaliteyle birlikte değerlendirilmelidir.",
+                            Title = "Yerel tedarikçi ağının geliştirilmesi",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000016"),
+                            CbamNote = "Demir-çelik ve alüminyumda hurda (ikincil hammadde) oranı ürünün gömülü emisyonunu doğrudan etkiler.",
+                            CbamRelevant = true,
+                            CostLevel = "Medium",
+                            DurationMaxMonths = 6,
+                            DurationMinMonths = 3,
+                            ImpactLevel = "Medium",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "Medium",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000016"),
+                            Rationale = "İkincil hammadde ve geri dönüştürülmüş ambalaj kullanımı hammadde maliyetini ve ürünün karbon ayak izini düşürebilir. Kalite gereksinimleri korunarak kademeli olarak artırılmalıdır.",
+                            Title = "Geri dönüştürülmüş ve çevre dostu malzeme kullanımının artırılması",
+                            TriggerType = "Question"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000017"),
+                            CbamRelevant = false,
+                            CostLevel = "Medium",
+                            Dimension = "DigitalInfrastructure",
+                            DurationMaxMonths = 6,
+                            DurationMinMonths = 3,
+                            ImpactLevel = "High",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "High",
+                            Rationale = "Dijital altyapınız temel seviyede. Süreçleri aşamalı olarak tek bir entegre sistemde birleştiren bir plan (önce muhasebe ve stok, ardından üretim ve müşteri yönetimi) hazırlanmalı; kamu dijitalleşme destekleri araştırılmalıdır.",
+                            Title = "Dijital dönüşüm yol haritası ve entegre ERP/CRM planı",
+                            TriggerType = "Dimension"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000018"),
+                            CbamRelevant = false,
+                            CostLevel = "Medium",
+                            Dimension = "EnergyEfficiency",
+                            DurationMaxMonths = 6,
+                            DurationMinMonths = 3,
+                            ImpactLevel = "High",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "High",
+                            Rationale = "Enerji verimliliğiniz düşük seviyede. Bir enerji sorumlusu atanması, tüketimin düzenli izlenmesi ve yıllık iyileştirme hedeflerinden oluşan bir yönetim sistemi, tek seferlik önlemlerin kalıcı tasarrufa dönüşmesini sağlar.",
+                            Title = "Enerji yönetim sistemi kurulması (ISO 50001 yaklaşımı)",
+                            TriggerType = "Dimension"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000019"),
+                            CbamNote = "AB'ye CBAM kapsamında ürün ihraç ettiğiniz için bu yol haritası öncelikli olarak ürün başına gömülü emisyon verisini üretmeye odaklanmalıdır.",
+                            CbamRelevant = true,
+                            CostLevel = "Medium",
+                            Dimension = "CarbonManagement",
+                            DurationMaxMonths = 3,
+                            DurationMinMonths = 1,
+                            ImpactLevel = "High",
+                            ImpactType = "StrategicCompliance",
+                            IsActive = true,
+                            Priority = "High",
+                            Rationale = "Karbon yönetiminde temel adımlar eksik. Önce kurumsal emisyon hesabı, ardından azaltım hedefleri ve ürün bazlı hesap şeklinde aşamalı bir plan hazırlanmalı; iklim düzenlemeleri ve müşteri talepleri bu alanı giderek zorunlu hale getirmektedir.",
+                            Title = "Karbon yönetimi için acil yol haritası",
+                            TriggerType = "Dimension"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8001-000000000020"),
+                            CbamRelevant = false,
+                            CostLevel = "Low",
+                            Dimension = "SupplyChain",
+                            DurationMaxMonths = 6,
+                            DurationMinMonths = 3,
+                            ImpactLevel = "Medium",
+                            ImpactType = "LongTermEfficiency",
+                            IsActive = true,
+                            Priority = "Medium",
+                            Rationale = "Tedarik zinciri boyutunuz zayıf. Tedarikçi seçimi, lojistik planlama ve malzeme tercihlerini kapsayan yazılı bir sürdürülebilir tedarik politikası, müşterilerin artan tedarik zinciri denetimlerine hazırlık sağlar.",
+                            Title = "Sürdürülebilir tedarik zinciri politikası",
+                            TriggerType = "Dimension"
+                        });
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Assessment", b =>
                 {
                     b.HasOne("EkoTwin.Models.Company", "Company")
@@ -325,9 +828,37 @@ namespace EkoTwin.Migrations
                     b.Navigation("Question");
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.AssessmentRecommendation", b =>
+                {
+                    b.HasOne("EkoTwin.Models.Assessment", "Assessment")
+                        .WithMany("Recommendations")
+                        .HasForeignKey("AssessmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EkoTwin.Models.Recommendation", null)
+                        .WithMany()
+                        .HasForeignKey("RecommendationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Assessment");
+                });
+
+            modelBuilder.Entity("EkoTwin.Models.Recommendation", b =>
+                {
+                    b.HasOne("EkoTwin.Models.Question", "Question")
+                        .WithMany()
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Question");
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Assessment", b =>
                 {
                     b.Navigation("AssessmentDetails");
+
+                    b.Navigation("Recommendations");
                 });
 
             modelBuilder.Entity("EkoTwin.Models.Company", b =>
