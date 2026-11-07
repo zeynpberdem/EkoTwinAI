@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Question> Questions => Set<Question>();
+    public DbSet<AnswerOption> AnswerOptions => Set<AnswerOption>();
     public DbSet<Assessment> Assessments => Set<Assessment>();
     public DbSet<AssessmentDetail> AssessmentDetails => Set<AssessmentDetail>();
     public DbSet<Recommendation> Recommendations => Set<Recommendation>();
@@ -64,6 +65,25 @@ public class AppDbContext : DbContext
             entity.HasIndex(q => q.DisplayOrder).IsUnique();
 
             entity.HasData(QuestionSeed.Questions);
+        });
+
+        // ---------- AnswerOption (cevap seçenekleri) ----------
+        modelBuilder.Entity<AnswerOption>(entity =>
+        {
+            entity.Property(o => o.Id).HasDefaultValueSql("uuidv7()");
+
+            entity.ToTable(t => t.HasCheckConstraint("CK_AnswerOptions_Score", "\"Score\" BETWEEN 1 AND 5"));
+
+            // Her soruda her puan için tek seçenek
+            entity.HasIndex(o => new { o.QuestionId, o.Score }).IsUnique();
+
+            // Soru silinirse seçenekleri de silinir.
+            entity.HasOne(o => o.Question)
+                  .WithMany(q => q.Options)
+                  .HasForeignKey(o => o.QuestionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasData(QuestionSeed.Options);
         });
 
         // ---------- Assessment ----------

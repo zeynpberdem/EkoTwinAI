@@ -29,8 +29,11 @@ public class AnswerRequest
 public record DimensionScoreResponse(
     Dimension Dimension,
     string DimensionName,
+    string SimpleName,
     decimal Score,
-    string MaturityLevel);
+    string MaturityLevel,
+    string SimpleMaturityLevel,
+    int MaturityStage);
 
 /// <summary>Soru bazında verilen yanıt.</summary>
 public record AnswerResponse(
@@ -38,7 +41,9 @@ public record AnswerResponse(
     int DisplayOrder,
     Dimension Dimension,
     string QuestionText,
-    int Score);
+    string SimpleText,
+    int Score,
+    string? AnswerLabel);
 
 /// <summary>SKDM / CBAM risk değerlendirmesi.</summary>
 public record CbamRiskResponse(
@@ -57,6 +62,8 @@ public record AssessmentResponse(
     DateTime CreatedAt,
     decimal TotalScore,
     string MaturityLevel,
+    string SimpleMaturityLevel,
+    int MaturityStage,
     IReadOnlyList<DimensionScoreResponse> DimensionScores,
     CbamRiskResponse CbamRisk,
     RecommendationReportResponse Recommendations,
@@ -68,6 +75,8 @@ public record AssessmentSummaryResponse(
     DateTime CreatedAt,
     decimal TotalScore,
     string MaturityLevel,
+    string SimpleMaturityLevel,
+    int MaturityStage,
     decimal DigitalInfrastructureScore,
     decimal EnergyEfficiencyScore,
     decimal CarbonManagementScore,
@@ -78,6 +87,8 @@ public record AssessmentSummaryResponse(
         a.CreatedAt,
         a.TotalScore,
         ScoreCalculator.MaturityLevel(a.TotalScore),
+        ScoreCalculator.SimpleMaturityLevel(a.TotalScore),
+        ScoreCalculator.MaturityStage(a.TotalScore),
         a.DigitalInfrastructureScore,
         a.EnergyEfficiencyScore,
         a.CarbonManagementScore,

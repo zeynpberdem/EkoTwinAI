@@ -85,6 +85,7 @@ public class AssessmentService : IAssessmentService
             .Include(a => a.Company)
             .Include(a => a.AssessmentDetails)
                 .ThenInclude(d => d.Question)
+                    .ThenInclude(q => q.Options)
             .Include(a => a.Recommendations)
             .FirstOrDefaultAsync(a => a.Id == id, ct);
 
@@ -163,8 +164,11 @@ public class AssessmentService : IAssessmentService
             .Select(kv => new DimensionScoreResponse(
                 kv.Key,
                 ScoreCalculator.DisplayName(kv.Key),
+                ScoreCalculator.SimpleName(kv.Key),
                 kv.Value,
-                ScoreCalculator.MaturityLevel(kv.Value)))
+                ScoreCalculator.MaturityLevel(kv.Value),
+                ScoreCalculator.SimpleMaturityLevel(kv.Value),
+                ScoreCalculator.MaturityStage(kv.Value)))
             .ToList();
 
         var answers = a.AssessmentDetails
@@ -174,7 +178,9 @@ public class AssessmentService : IAssessmentService
                 d.Question.DisplayOrder,
                 d.Question.Dimension,
                 d.Question.Text,
-                d.Score))
+                d.Question.SimpleText,
+                d.Score,
+                d.Question.Options.FirstOrDefault(o => o.Score == d.Score)?.Label))
             .ToList();
 
         return new AssessmentResponse(
@@ -184,6 +190,8 @@ public class AssessmentService : IAssessmentService
             a.CreatedAt,
             a.TotalScore,
             ScoreCalculator.MaturityLevel(a.TotalScore),
+            ScoreCalculator.SimpleMaturityLevel(a.TotalScore),
+            ScoreCalculator.MaturityStage(a.TotalScore),
             dimensionScores,
             CbamRiskEvaluator.Evaluate(a.Company.ExportsToEu, a.Company.CbamProductGroup, a.CarbonManagementScore),
             ToRecommendationReport(a.Recommendations, scores),

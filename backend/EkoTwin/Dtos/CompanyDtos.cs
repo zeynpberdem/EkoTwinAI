@@ -59,4 +59,4 @@ public record CompanyResponse(
 }
 
 /// <summary>Açılır listeler için değer + Türkçe ad.</summary>
-public record LookupItem(string Value, string Name);
+public record LookupItem(string Value, string Name, string? SimpleName = null);

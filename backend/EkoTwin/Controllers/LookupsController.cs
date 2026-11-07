@@ -26,5 +26,5 @@ public class LookupsController : ControllerBase
     /// <summary>Değerlendirmenin 4 boyutu.</summary>
     [HttpGet("dimensions")]
     public ActionResult<IEnumerable<LookupItem>> Dimensions() =>
-        Ok(Enum.GetValues<Dimension>().Select(d => new LookupItem(d.ToString(), Lookups.DimensionName(d))));
+        Ok(Enum.GetValues<Dimension>().Select(d => new LookupItem(d.ToString(), Lookups.DimensionName(d), ScoreCalculator.SimpleName(d))));
 }

@@ -22,6 +22,597 @@ namespace EkoTwin.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("EkoTwin.Models.AnswerOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid>("QuestionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId", "Score")
+                        .IsUnique();
+
+                    b.ToTable("AnswerOptions", t =>
+                        {
+                            t.HasCheckConstraint("CK_AnswerOptions_Score", "\"Score\" BETWEEN 1 AND 5");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000011"),
+                            Label = "Hayır, defter veya kâğıtla tutuyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000001"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000012"),
+                            Label = "Excel gibi ayrı dosyalarla tutuyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000001"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000013"),
+                            Label = "Bazı işler için program kullanıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000001"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000014"),
+                            Label = "Çoğu işimiz tek programda",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000001"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000015"),
+                            Label = "Her şey tek programda ve birbirine bağlı",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000001"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000021"),
+                            Label = "Hayır, kayıt tutmuyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000002"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000022"),
+                            Label = "Kâğıda yazıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000002"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000023"),
+                            Label = "Gün sonunda bilgisayara giriyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000002"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000024"),
+                            Label = "Bazı makinelerden bilgi kendiliğinden geliyor",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000002"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000025"),
+                            Label = "Tüm üretimi anlık olarak ekrandan izliyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000002"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000031"),
+                            Label = "Hiçbir önlem yok",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000003"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000032"),
+                            Label = "Sadece virüs programı var",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000003"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000033"),
+                            Label = "Ara sıra yedek alıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000003"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000034"),
+                            Label = "Düzenli yedek alıyoruz, şifre kurallarımız var",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000003"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000035"),
+                            Label = "Düzenli yedek ve koruma var, bundan sorumlu bir kişi var",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000003"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000041"),
+                            Label = "Hiç vermedik",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000004"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000042"),
+                            Label = "Gerektiğinde birbirlerinden öğreniyorlar",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000004"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000043"),
+                            Label = "Yeni program gelince eğitim veriyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000004"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000044"),
+                            Label = "Yılda bir-iki kez eğitim yapıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000004"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000045"),
+                            Label = "Düzenli bir eğitim planımız var",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000004"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000051"),
+                            Label = "Hayır, sadece faturayı ödüyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000005"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000052"),
+                            Label = "Faturaları aydan aya karşılaştırıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000005"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000053"),
+                            Label = "Bazı bölümlerde ayrı sayaç var",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000005"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000054"),
+                            Label = "Önemli makinelerde sayaç var, düzenli bakıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000005"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000055"),
+                            Label = "Anlık izliyoruz ve tasarruf hedefi koyuyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000005"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000061"),
+                            Label = "Hayır, hepsi eski sistem",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000006"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000062"),
+                            Label = "Birkaç lambayı değiştirdik",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000006"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000063"),
+                            Label = "Yaklaşık yarısı tasarruflu",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000006"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000064"),
+                            Label = "Büyük kısmı tasarruflu",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000006"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000065"),
+                            Label = "Tamamı tasarruflu ve kendiliğinden ayarlanıyor",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000006"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000071"),
+                            Label = "Hayır, bu konuya hiç bakmadık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000007"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000072"),
+                            Label = "Boşta çalışan makineleri kapatıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000007"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000073"),
+                            Label = "Kaçakları ve arızaları hemen onarıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000007"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000074"),
+                            Label = "Tasarruflu motor veya kompresör aldık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000007"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000075"),
+                            Label = "Bunlara ek olarak atık ısıyı da geri kazanıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000007"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000081"),
+                            Label = "Hayır, hiç düşünmedik",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000008"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000082"),
+                            Label = "Düşünüyoruz ama yaptırmadık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000008"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000083"),
+                            Label = "Bir kez yaptırdık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000008"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000084"),
+                            Label = "Yaptırdık ve önerileri uyguladık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000008"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000085"),
+                            Label = "Birkaç yılda bir düzenli yaptırıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000008"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000091"),
+                            Label = "Hayır, hiç hesaplamadık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000009"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000092"),
+                            Label = "Ne olduğunu biliyoruz ama hesaplamadık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000009"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000093"),
+                            Label = "Bir kez kabaca hesapladık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000009"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000094"),
+                            Label = "Her yıl hesaplıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000009"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000095"),
+                            Label = "Her yıl hesaplıyor ve uzmana doğrulatıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000009"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000101"),
+                            Label = "Hayır",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000010"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000102"),
+                            Label = "Müşterimiz sordu ama cevap veremedik",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000010"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000103"),
+                            Label = "Bir ürün için kabaca hesapladık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000010"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000104"),
+                            Label = "Ana ürünlerimiz için hesapladık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000010"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000105"),
+                            Label = "Tüm ürünlerimiz için hesaplı ve belgeli",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000010"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000111"),
+                            Label = "Hayır",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000011"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000112"),
+                            Label = "Düşünüyoruz ama yazılı değil",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000011"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000113"),
+                            Label = "Hedefimiz var, planımız yok",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000011"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000114"),
+                            Label = "Hedefimiz de planımız da var",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000011"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000115"),
+                            Label = "Planı uyguluyoruz, her yıl kontrol ediyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000011"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000121"),
+                            Label = "Bu kuralları hiç duymadık",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000012"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000122"),
+                            Label = "Duyduk ama ne yapacağımızı bilmiyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000012"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000123"),
+                            Label = "Bilgi topluyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000012"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000124"),
+                            Label = "Hazırlanıyoruz, müşterimize bilgi verebiliyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000012"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000125"),
+                            Label = "Tamamen hazırız",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000012"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000131"),
+                            Label = "Hayır, sadece fiyata bakıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000013"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000132"),
+                            Label = "Bazen aklımıza geliyor",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000013"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000133"),
+                            Label = "Önemli tedarikçilerimize soruyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000013"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000134"),
+                            Label = "Yazılı kurallarımız var",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000013"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000135"),
+                            Label = "Yazılı kurallarımız var ve düzenli kontrol ediyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000013"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000141"),
+                            Label = "Hayır, plan yapmıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000014"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000142"),
+                            Label = "Bazen sevkiyatları birleştiriyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000014"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000143"),
+                            Label = "Sevkiyatları önceden planlıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000014"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000144"),
+                            Label = "Araç doluluğuna ve güzergâha bakıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000014"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000145"),
+                            Label = "Bir programla planlıyor ve yakıtı takip ediyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000014"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000151"),
+                            Label = "Hayır, çoğu uzaktan veya yurt dışından",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000015"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000152"),
+                            Label = "Az bir kısmı yakından",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000015"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000153"),
+                            Label = "Yarı yarıya",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000015"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000154"),
+                            Label = "Çoğunu yakından alıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000015"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000155"),
+                            Label = "Yakından alınabilecek her şeyi yakından alıyoruz",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000015"),
+                            Score = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000161"),
+                            Label = "Hayır",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000016"),
+                            Score = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000162"),
+                            Label = "Çok az",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000016"),
+                            Score = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000163"),
+                            Label = "Bazı ürünlerimizde",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000016"),
+                            Score = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000164"),
+                            Label = "Ürünlerimizin çoğunda",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000016"),
+                            Score = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8003-000000000165"),
+                            Label = "Mümkün olan her yerde",
+                            QuestionId = new Guid("00000000-0000-7000-8000-000000000016"),
+                            Score = 5
+                        });
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Assessment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -510,8 +1101,17 @@ namespace EkoTwin.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("integer");
 
+                    b.Property<string>("HelpText")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("SimpleText")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -531,7 +1131,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000001"),
                             Dimension = "DigitalInfrastructure",
                             DisplayOrder = 1,
+                            HelpText = "Defter ve dağınık dosyalar yerine, işlerinizi tek yerde tutan bir program (ön muhasebe programı veya ERP).",
                             IsActive = true,
+                            SimpleText = "Muhasebe, stok ve satışı bir bilgisayar programında mı takip ediyorsunuz?",
                             Text = "İş süreçlerinizde (stok, satış, muhasebe) entegre bir ERP veya CRM yazılımı kullanıyor musunuz?"
                         },
                         new
@@ -539,7 +1141,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000002"),
                             Dimension = "DigitalInfrastructure",
                             DisplayOrder = 2,
+                            HelpText = "Üretim bilgilerinin kâğıtta değil, bilgisayarda ve zamanında tutulması.",
                             IsActive = true,
+                            SimpleText = "Ne kadar ürettiğinizi ve makinelerin ne zaman durduğunu kayıt altına alıyor musunuz?",
                             Text = "Üretim veya operasyon verileriniz dijital ortamda anlık olarak toplanıyor mu?"
                         },
                         new
@@ -547,7 +1151,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000003"),
                             Dimension = "DigitalInfrastructure",
                             DisplayOrder = 3,
+                            HelpText = "Düzenli yedek almak, virüs programı ve güçlü şifre kullanmak (siber güvenlik).",
                             IsActive = true,
+                            SimpleText = "Bilgisayarlarınızı ve kayıtlarınızı virüse ve veri kaybına karşı koruyor musunuz?",
                             Text = "Siber güvenlik önlemleri (düzenli yedekleme, firewall vb.) aktif olarak uygulanıyor mu?"
                         },
                         new
@@ -556,6 +1162,7 @@ namespace EkoTwin.Migrations
                             Dimension = "DigitalInfrastructure",
                             DisplayOrder = 4,
                             IsActive = true,
+                            SimpleText = "Çalışanlarınıza bilgisayar ve program kullanımı konusunda eğitim veriyor musunuz?",
                             Text = "Çalışanlarınızın dijital yetkinliklerini artırmak için düzenli eğitimler veriliyor mu?"
                         },
                         new
@@ -563,7 +1170,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000005"),
                             Dimension = "EnergyEfficiency",
                             DisplayOrder = 5,
+                            HelpText = "Bölüm veya makine bazında ayrı sayaç, harcamayı anlık gösteren ekran.",
                             IsActive = true,
+                            SimpleText = "Ne kadar elektrik ve yakıt harcadığınızı faturadan başka bir yolla takip ediyor musunuz?",
                             Text = "Tesisinizde enerji tüketimini anlık izleyen sayaç veya otomasyon sistemleri var mı?"
                         },
                         new
@@ -571,7 +1180,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000006"),
                             Dimension = "EnergyEfficiency",
                             DisplayOrder = 6,
+                            HelpText = "LED lamba, hareket sensörü, ayarlı termostat, yalıtım gibi.",
                             IsActive = true,
+                            SimpleText = "Aydınlatma, ısıtma ve soğutmada tasarruflu ürünler kullanıyor musunuz?",
                             Text = "Aydınlatma ve ısıtma/soğutma sistemleriniz enerji verimli (LED, akıllı termostat vb.) teknolojiye sahip mi?"
                         },
                         new
@@ -579,7 +1190,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000007"),
                             Dimension = "EnergyEfficiency",
                             DisplayOrder = 7,
+                            HelpText = "Basınçlı hava kaçaklarını gidermek, boşta çalışan makineleri kapatmak, fırın ve ocak ısısını tekrar kullanmak.",
                             IsActive = true,
+                            SimpleText = "Üretimde enerji israfını azaltmak için önlem alıyor musunuz?",
                             Text = "Üretim süreçlerinizde atık ısı geri kazanımı veya enerji tasarrufu sağlayan önlemler alınıyor mu?"
                         },
                         new
@@ -587,7 +1200,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000008"),
                             Dimension = "EnergyEfficiency",
                             DisplayOrder = 8,
+                            HelpText = "Enerji verimliliği etüdü: uzman nerede israf olduğunu ölçer ve rapor verir.",
                             IsActive = true,
+                            SimpleText = "Enerji tasarrufu için tesisinizi bir uzmana inceletiniz mi?",
                             Text = "Enerji verimliliğine yönelik periyodik etütler veya denetimler yapılıyor mu?"
                         },
                         new
@@ -595,7 +1210,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000009"),
                             Dimension = "CarbonManagement",
                             DisplayOrder = 9,
+                            HelpText = "Yaktığınız yakıttan ve kullandığınız elektrikten çıkan karbonun hesabı (karbon ayak izi). EkoTwin'in karbon hesaplayıcısıyla da yapabilirsiniz.",
                             IsActive = true,
+                            SimpleText = "Firmanızın bir yılda ne kadar karbon saldığını hesapladınız mı?",
                             Text = "Kapsam 1 (doğrudan) ve Kapsam 2 (dolaylı) emisyonlarınızı hesaplıyor ve takip ediyor musunuz?"
                         },
                         new
@@ -603,7 +1220,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000010"),
                             Dimension = "CarbonManagement",
                             DisplayOrder = 10,
+                            HelpText = "Bir ürünün hammaddesinden müşteriye ulaşana kadar çıkan karbon (ürün karbon ayak izi). Avrupalı müşteriler bunu giderek daha çok soruyor.",
                             IsActive = true,
+                            SimpleText = "Sattığınız ürünlerin karbonunu ayrı ayrı hesapladınız mı?",
                             Text = "Ürünlerinizin karbon ayak izini (LCA - Yaşam Döngüsü Analizi) ölçümlediniz mi?"
                         },
                         new
@@ -611,7 +1230,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000011"),
                             Dimension = "CarbonManagement",
                             DisplayOrder = 11,
+                            HelpText = "Örneğin \"2030'a kadar yüzde 20 azaltacağız\" demek ve bunun için atılacak adımları yazmak.",
                             IsActive = true,
+                            SimpleText = "Karbonunuzu azaltmak için bir hedefiniz ve planınız var mı?",
                             Text = "Karbon emisyonlarını azaltmak için somut bir hedefiniz ve azaltım yol haritanız var mı?"
                         },
                         new
@@ -619,7 +1240,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000012"),
                             Dimension = "CarbonManagement",
                             DisplayOrder = 12,
+                            HelpText = "AB'nin Sınırda Karbon Düzenlemesi (SKDM / CBAM). Demir-çelik, alüminyum, çimento gibi ürünlerde Avrupalı alıcı ürünün karbon bilgisini istiyor. Avrupa'ya satışınız yoksa bile müşterileriniz ileride sorabilir.",
                             IsActive = true,
+                            SimpleText = "Avrupa'ya mal satarken istenen karbon kurallarına ne kadar hazırsınız?",
                             Text = "AB Yeşil Mutabakatı ve SKDM (CBAM) kriterlerine uyum düzeyiniz nedir?"
                         },
                         new
@@ -627,7 +1250,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000013"),
                             Dimension = "SupplyChain",
                             DisplayOrder = 13,
+                            HelpText = "Fiyat ve kalitenin yanında çevre belgesine (örneğin ISO 14001) ve atıklarını nasıl yönettiklerine bakmak.",
                             IsActive = true,
+                            SimpleText = "Malzeme aldığınız firmaları seçerken çevreye verdikleri önemi dikkate alıyor musunuz?",
                             Text = "Tedarikçilerinizi seçerken sürdürülebilirlik ve çevre kriterlerini dikkate alıyor musunuz?"
                         },
                         new
@@ -635,7 +1260,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000014"),
                             Dimension = "SupplyChain",
                             DisplayOrder = 14,
+                            HelpText = "Araçları dolu göndermek, yolu kısaltmak, boş dönüşleri azaltmak.",
                             IsActive = true,
+                            SimpleText = "Mal taşımayı ve sevkiyatı yakıt tasarrufunu düşünerek planlıyor musunuz?",
                             Text = "Lojistik ve taşıma operasyonlarınızda karbon salınımını optimize edecek planlamalar yapılıyor mu?"
                         },
                         new
@@ -643,7 +1270,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000015"),
                             Dimension = "SupplyChain",
                             DisplayOrder = 15,
+                            HelpText = "Yakından almak hem taşımadan çıkan karbonu hem de bekleme süresini azaltır.",
                             IsActive = true,
+                            SimpleText = "Malzemeleri mümkün olduğunca yakındaki firmalardan mı alıyorsunuz?",
                             Text = "Hammadde ve malzeme tedarikinde yerel tedarikçilere öncelik veriliyor mu?"
                         },
                         new
@@ -651,7 +1280,9 @@ namespace EkoTwin.Migrations
                             Id = new Guid("00000000-0000-7000-8000-000000000016"),
                             Dimension = "SupplyChain",
                             DisplayOrder = 16,
+                            HelpText = "Hurda metal, geri dönüştürülmüş plastik veya kâğıt, belgeli ahşap gibi.",
                             IsActive = true,
+                            SimpleText = "Geri dönüştürülmüş ya da çevre dostu malzeme kullanıyor musunuz?",
                             Text = "Tedarik zincirinizde geri dönüştürülmüş veya çevre dostu malzeme kullanılıyor mu?"
                         });
                 });
@@ -1066,6 +1697,17 @@ namespace EkoTwin.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.AnswerOption", b =>
+                {
+                    b.HasOne("EkoTwin.Models.Question", "Question")
+                        .WithMany("Options")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Assessment", b =>
                 {
                     b.HasOne("EkoTwin.Models.Company", "Company")
@@ -1179,6 +1821,8 @@ namespace EkoTwin.Migrations
             modelBuilder.Entity("EkoTwin.Models.Question", b =>
                 {
                     b.Navigation("AssessmentDetails");
+
+                    b.Navigation("Options");
                 });
 #pragma warning restore 612, 618
         }

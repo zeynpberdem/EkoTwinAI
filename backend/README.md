@@ -169,13 +169,15 @@ Kurallar:
 | Boyut skoru (0–100) | (o boyuttaki 4 yanıtın ortalaması − 1) / 4 × 100 |
 | Genel skor (0–100) | 4 boyut skorunun eşit ağırlıklı ortalaması |
 
-| Skor | Olgunluk seviyesi |
-|---|---|
-| 0 – 19,99 | Başlangıç |
-| 20 – 39,99 | Farkındalık |
-| 40 – 59,99 | Gelişen |
-| 60 – 79,99 | Olgun |
-| 80 – 100 | Öncü |
+| Skor | Olgunluk seviyesi | Sade ad (`simpleMaturityLevel`) | Kademe (`maturityStage`) |
+|---|---|---|---|
+| 0 – 19,99 | Başlangıç | Yolun başında | 1 |
+| 20 – 39,99 | Farkındalık | Farkında | 2 |
+| 40 – 59,99 | Gelişen | Gelişiyor | 3 |
+| 60 – 79,99 | Olgun | İyi durumda | 4 |
+| 80 – 100 | Öncü | Örnek firma | 5 |
+
+Kademe (1-5) arayüzde renk ve ikon seçimi için kullanılır.
 
 Kurallar tek bir dosyada toplanmıştır: [`EkoTwin/Services/ScoreCalculator.cs`](EkoTwin/Services/ScoreCalculator.cs)
 
@@ -342,6 +344,42 @@ Eşikler öneri motorunun tetikleme eşikleriyle aynıdır. A3'teki öneri snaps
 
 Kurallar: [`ProgressAnalyzer.cs`](EkoTwin/Services/ProgressAnalyzer.cs), [`CarbonTargetEvaluator.cs`](EkoTwin/Services/CarbonTargetEvaluator.cs)
 
+## Sade dil (her yaştan KOBİ sahibi için)
+
+Kullanıcıya gösterilen metinler teknik değil, günlük dille yazılır. Teknik terimler kaybolmaz,
+yalnızca "Bu ne demek?" açıklamasına (arayüzde ⓘ simgesi) taşınır.
+
+**Sorular** (`GET /api/questions`): her soruda
+
+| Alan | Kullanım |
+|---|---|
+| `simpleText` | Kartta gösterilen sade soru |
+| `helpText` | ⓘ ile açılan açıklama (teknik terim burada, parantez içinde) |
+| `options` | 5 anlamlı cevap (`label`); seçilen seçeneğin `score` değeri (1-5) gönderilir |
+| `text` | Resmi / teknik metin (danışman, akademik rapor) |
+
+Seçenekler görüş değil davranış sorar ("ne yapıyorsunuz?") ve 1'den 5'e merdiven gibi ilerler.
+Skor hesabı değişmez. Raporda her yanıtın seçilen cevap metni (`answerLabel`), boyutların sade adı
+(Dijital düzen, Enerji tasarrufu, Karbon takibi, Tedarikçiler ve malzeme) ve sade seviye adı döner.
+
+**Ölçüm ve koruma** ([`QuestionSeedTests`](EkoTwin.Tests/QuestionSeedTests.cs))
+- Jargon testi: sade soru ve seçeneklerde ERP, CBAM, emisyon, entegre vb. geçemez.
+- Uzunluk: sade soru ≤ 15 kelime, seçenek ≤ 10 kelime.
+- Ateşman okunabilirlik formülü (1997) metin bütünlerine uygulanır
+  ([`Readability.cs`](EkoTwin/Services/Readability.cs)):
+
+| Metin bütünü | Ateşman | Seviye |
+|---|---|---|
+| Resmi soru metinleri | 54,9 | Orta güçlükte |
+| Sade soru metinleri | 58,4 | Orta güçlükte |
+| Cevap seçenekleri | 77,1 | Kolay (test eşiği ≥ 70) |
+| "Bu ne demek?" açıklamaları | 63,9 | Orta güçlükte (test eşiği ≥ 50) |
+
+Not: Ateşman yalnızca kelime/cümle uzunluğuna bakar. "ERP", "LCA" gibi kısaltmaları kısa (kolay) sayar,
+uzun Türkçe kelimeleri cezalandırır. Bu yüzden resmi ve sade sorular arasındaki fark küçük çıkar; asıl
+sadeleşme jargon testiyle güvence altındadır. Formül tek cümlede de güvenilir değildir (paragraflar
+için tasarlanmıştır). Kesin değerlendirme için gerçek kullanıcılarla kullanılabilirlik testi planlanmıştır.
+
 ## Testler
 
 `backend` klasöründe:
@@ -363,6 +401,9 @@ dotnet test
 - `ProgressServiceTests` – karşılaştırma, otomatik öneri takibi, gelişim özeti, karbon trendi, hedef kuralları
 - `CarbonTargetEvaluatorTests` – hedef durumu (ulaşıldı / yolunda / geride), tahmini yıl, sınır durumlar
 - `ProgressApiTests` – gelişim, karşılaştırma ve hedef uç noktaları uçtan uca
+- `QuestionSeedTests` – soru/seçenek yapısı, jargon yasağı, uzunluk sınırları, okunabilirlik
+- `ReadabilityTests` – Ateşman formülünün elle hesapla doğrulanması
+- `SimpleLanguageApiTests` – sade metin, açıklama, seçenekler ve rapordaki cevap metni uçtan uca
 - `ApiIntegrationTests` – uygulamayı HTTP üzerinden uçtan uca çalıştırır: sağlık kontrolü, CORS,
   hata yanıtları, firma uç noktaları, açılır listeler
 
@@ -383,7 +424,7 @@ bunlar gerçek veritabanında ayrıca denenmiştir.
 
 ## Soruları değiştirme
 
-Soru metinleri [`EkoTwin/Data/QuestionSeed.cs`](EkoTwin/Data/QuestionSeed.cs) dosyasındadır.
+Soru metinleri (resmi, sade, açıklama) ve cevap seçenekleri [`EkoTwin/Data/QuestionSeed.cs`](EkoTwin/Data/QuestionSeed.cs) dosyasındadır.
 Metni değiştirdikten sonra:
 
 ```

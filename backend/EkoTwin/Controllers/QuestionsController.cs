@@ -1,5 +1,6 @@
 using EkoTwin.Data;
 using EkoTwin.Dtos;
+using EkoTwin.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,9 +25,18 @@ public class QuestionsController : ControllerBase
             .AsNoTracking()
             .Where(q => q.IsActive)
             .OrderBy(q => q.DisplayOrder)
-            .Select(q => new QuestionResponse(q.Id, q.DisplayOrder, q.Dimension, q.Text))
+            .Include(q => q.Options)
             .ToListAsync(ct);
 
-        return Ok(questions);
+        return Ok(questions.Select(q => new QuestionResponse(
+            q.Id,
+            q.DisplayOrder,
+            q.Dimension,
+            ScoreCalculator.DisplayName(q.Dimension),
+            ScoreCalculator.SimpleName(q.Dimension),
+            q.Text,
+            q.SimpleText,
+            q.HelpText,
+            q.Options.OrderBy(o => o.Score).Select(o => new AnswerOptionResponse(o.Score, o.Label)).ToList())));
     }
 }

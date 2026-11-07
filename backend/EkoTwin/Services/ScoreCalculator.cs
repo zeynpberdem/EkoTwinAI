@@ -40,6 +40,36 @@ public static class ScoreCalculator
         _ => "Öncü"
     };
 
+    /// <summary>Olgunluk kademesi 1-5 (arayüzde renk/ikon seçimi için): 1 = Başlangıç ... 5 = Öncü.</summary>
+    public static int MaturityStage(decimal score) => score switch
+    {
+        < 20m => 1,
+        < 40m => 2,
+        < 60m => 3,
+        < 80m => 4,
+        _ => 5
+    };
+
+    /// <summary>Olgunluk seviyesinin KOBİ sahibine gösterilen sade adı.</summary>
+    public static string SimpleMaturityLevel(decimal score) => MaturityStage(score) switch
+    {
+        1 => "Yolun başında",
+        2 => "Farkında",
+        3 => "Gelişiyor",
+        4 => "İyi durumda",
+        _ => "Örnek firma"
+    };
+
+    /// <summary>Boyutun sade adı (KOBİ sahibine gösterilen).</summary>
+    public static string SimpleName(Dimension dimension) => dimension switch
+    {
+        Dimension.DigitalInfrastructure => "Dijital düzen",
+        Dimension.EnergyEfficiency => "Enerji tasarrufu",
+        Dimension.CarbonManagement => "Karbon takibi",
+        Dimension.SupplyChain => "Tedarikçiler ve malzeme",
+        _ => dimension.ToString()
+    };
+
     /// <summary>Boyutun Türkçe adı (raporlarda kullanmak için).</summary>
     public static string DisplayName(Dimension dimension) => dimension switch
     {
