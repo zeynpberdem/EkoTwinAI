@@ -82,5 +82,28 @@ GET {{host}}/api/companies/{{companyId}}/assessments
 ### 8) Tek bir değerlendirme raporu (6. adımda dönen "id")
 GET {{host}}/api/assessments/BURAYA-DEGERLENDIRME-ID
 
-### 9) Firmayı sil (DİKKAT: tüm değerlendirmeleri de silinir)
+### 9) Karbon hesaplayıcı: emisyon faktörleri (birimler ve kaynakları)
+GET {{host}}/api/emission-factors
+
+### 10) Yıllık karbon hesabı (fatura değerleri; kullanılmayan kaynakları göndermeyin)
+POST {{host}}/api/companies/{{companyId}}/carbon-footprints
+Content-Type: application/json
+
+{
+  "year": 2025,
+  "entries": [
+    { "source": "Electricity", "quantity": 380000 },
+    { "source": "NaturalGas",  "quantity": 30000 },
+    { "source": "Coke",        "quantity": 160 },
+    { "source": "Diesel",      "quantity": 5500 }
+  ]
+}
+
+### 11) Firmanın yıllık karbon kayıtları
+GET {{host}}/api/companies/{{companyId}}/carbon-footprints
+
+### 12) Karbon raporu (10. adımda dönen "id")
+GET {{host}}/api/carbon-footprints/BURAYA-KARBON-ID
+
+### 13) Firmayı sil (DİKKAT: tüm değerlendirmeleri ve karbon kayıtları da silinir)
 DELETE {{host}}/api/companies/{{companyId}}

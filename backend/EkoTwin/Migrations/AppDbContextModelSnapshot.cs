@@ -184,6 +184,108 @@ namespace EkoTwin.Migrations
                     b.ToTable("AssessmentRecommendations");
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.CarbonFootprint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EmployeeCount")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Scope1Tonnes")
+                        .HasPrecision(14, 3)
+                        .HasColumnType("numeric(14,3)");
+
+                    b.Property<decimal>("Scope2Tonnes")
+                        .HasPrecision(14, 3)
+                        .HasColumnType("numeric(14,3)");
+
+                    b.Property<decimal>("TonnesPerEmployee")
+                        .HasPrecision(14, 3)
+                        .HasColumnType("numeric(14,3)");
+
+                    b.Property<decimal>("TotalTonnes")
+                        .HasPrecision(14, 3)
+                        .HasColumnType("numeric(14,3)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Year")
+                        .IsUnique();
+
+                    b.ToTable("CarbonFootprints", t =>
+                        {
+                            t.HasCheckConstraint("CK_CarbonFootprints_Year", "\"Year\" BETWEEN 2000 AND 2100");
+                        });
+                });
+
+            modelBuilder.Entity("EkoTwin.Models.CarbonFootprintItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<Guid>("CarbonFootprintId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("EmissionTonnes")
+                        .HasPrecision(14, 3)
+                        .HasColumnType("numeric(14,3)");
+
+                    b.Property<decimal>("FactorKgCo2ePerUnit")
+                        .HasPrecision(12, 4)
+                        .HasColumnType("numeric(12,4)");
+
+                    b.Property<string>("FactorReference")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(14, 3)
+                        .HasColumnType("numeric(14,3)");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarbonFootprintId", "Source")
+                        .IsUnique();
+
+                    b.ToTable("CarbonFootprintItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_CarbonFootprintItems_Quantity", "\"Quantity\" >= 0");
+                        });
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Company", b =>
                 {
                     b.Property<Guid>("Id")
@@ -225,6 +327,133 @@ namespace EkoTwin.Migrations
                     b.HasIndex("Sector");
 
                     b.ToTable("Companies");
+                });
+
+            modelBuilder.Entity("EkoTwin.Models.EmissionFactor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("KgCo2ePerUnit")
+                        .HasPrecision(12, 4)
+                        .HasColumnType("numeric(12,4)");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("ReferenceYear")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Source")
+                        .IsUnique();
+
+                    b.ToTable("EmissionFactors", t =>
+                        {
+                            t.HasCheckConstraint("CK_EmissionFactors_Positive", "\"KgCo2ePerUnit\" > 0");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8002-000000000001"),
+                            IsActive = true,
+                            KgCo2ePerUnit = 0.478m,
+                            Reference = "T.C. Enerji ve Tabii Kaynaklar Bakanlığı, 2022 Yılı Elektrik Üretim ve Tüketim Noktası Emisyon Faktörleri: dağıtım hattına bağlı tüketim noktası 0,478 tCO2e/MWh.",
+                            ReferenceYear = 2022,
+                            Scope = "Scope2",
+                            Source = "Electricity",
+                            Unit = "kWh"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8002-000000000002"),
+                            IsActive = true,
+                            KgCo2ePerUnit = 1.9372m,
+                            Reference = "IPCC 2006 Rehberi Cilt 2: Tablo 1.2 (alt ısıl değer) ve Tablo 2.3 (imalat sanayi sabit yanma); GWP: IPCC AR5 (CH4 28, N2O 265). Doğal gaz: 9.155 kcal/Sm³ üst ısıl değer (EPDK/BOTAŞ referansı), ALD = ÜID × 0,90.",
+                            ReferenceYear = 2006,
+                            Scope = "Scope1",
+                            Source = "NaturalGas",
+                            Unit = "m³"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8002-000000000003"),
+                            IsActive = true,
+                            KgCo2ePerUnit = 2.6853m,
+                            Reference = "IPCC 2006 Rehberi Cilt 2: Tablo 1.2 (alt ısıl değer) ve Tablo 2.3 (imalat sanayi sabit yanma); GWP: IPCC AR5 (CH4 28, N2O 265). Motorin (gas/diesel oil): ALD 43,0 MJ/kg, yoğunluk varsayımı 0,84 kg/L.",
+                            ReferenceYear = 2006,
+                            Scope = "Scope1",
+                            Source = "Diesel",
+                            Unit = "litre"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8002-000000000004"),
+                            IsActive = true,
+                            KgCo2ePerUnit = 2.2952m,
+                            Reference = "IPCC 2006 Rehberi Cilt 2: Tablo 1.2 (alt ısıl değer) ve Tablo 2.3 (imalat sanayi sabit yanma); GWP: IPCC AR5 (CH4 28, N2O 265). Benzin (motor gasoline): ALD 44,3 MJ/kg, yoğunluk varsayımı 0,745 kg/L.",
+                            ReferenceYear = 2006,
+                            Scope = "Scope1",
+                            Source = "Gasoline",
+                            Unit = "litre"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8002-000000000005"),
+                            IsActive = true,
+                            KgCo2ePerUnit = 2.9872m,
+                            Reference = "IPCC 2006 Rehberi Cilt 2: Tablo 1.2 (alt ısıl değer) ve Tablo 2.3 (imalat sanayi sabit yanma); GWP: IPCC AR5 (CH4 28, N2O 265). LPG: ALD 47,3 MJ/kg.",
+                            ReferenceYear = 2006,
+                            Scope = "Scope1",
+                            Source = "Lpg",
+                            Unit = "kg"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8002-000000000006"),
+                            IsActive = true,
+                            KgCo2ePerUnit = 3036.5055m,
+                            Reference = "IPCC 2006 Rehberi Cilt 2: Tablo 1.2 (alt ısıl değer) ve Tablo 2.3 (imalat sanayi sabit yanma); GWP: IPCC AR5 (CH4 28, N2O 265). Kok (coke oven coke): ALD 28,2 MJ/kg.",
+                            ReferenceYear = 2006,
+                            Scope = "Scope1",
+                            Source = "Coke",
+                            Unit = "ton"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8002-000000000007"),
+                            IsActive = true,
+                            KgCo2ePerUnit = 1209.9623m,
+                            Reference = "IPCC 2006 Rehberi Cilt 2: Tablo 1.2 (alt ısıl değer) ve Tablo 2.3 (imalat sanayi sabit yanma); GWP: IPCC AR5 (CH4 28, N2O 265). Linyit: IPCC varsayılan ALD 11,9 MJ/kg; Türk linyitlerinde ısıl değer ocağa göre değişir.",
+                            ReferenceYear = 2006,
+                            Scope = "Scope1",
+                            Source = "Lignite",
+                            Unit = "ton"
+                        });
                 });
 
             modelBuilder.Entity("EkoTwin.Models.Question", b =>
@@ -844,6 +1073,28 @@ namespace EkoTwin.Migrations
                     b.Navigation("Assessment");
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.CarbonFootprint", b =>
+                {
+                    b.HasOne("EkoTwin.Models.Company", "Company")
+                        .WithMany("CarbonFootprints")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("EkoTwin.Models.CarbonFootprintItem", b =>
+                {
+                    b.HasOne("EkoTwin.Models.CarbonFootprint", "CarbonFootprint")
+                        .WithMany("Items")
+                        .HasForeignKey("CarbonFootprintId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CarbonFootprint");
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Recommendation", b =>
                 {
                     b.HasOne("EkoTwin.Models.Question", "Question")
@@ -861,9 +1112,16 @@ namespace EkoTwin.Migrations
                     b.Navigation("Recommendations");
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.CarbonFootprint", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("EkoTwin.Models.Company", b =>
                 {
                     b.Navigation("Assessments");
+
+                    b.Navigation("CarbonFootprints");
                 });
 
             modelBuilder.Entity("EkoTwin.Models.Question", b =>

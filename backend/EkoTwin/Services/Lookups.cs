@@ -48,4 +48,23 @@ public static class Lookups
         minMonths == maxMonths ? $"{minMonths} ay" : $"{minMonths}-{maxMonths} ay";
 
     public static string CbamProductGroupName(CbamProductGroup group) => CbamRiskEvaluator.DisplayName(group);
+
+    public static string EmissionSourceName(EmissionSource source) => source switch
+    {
+        EmissionSource.Electricity => "Elektrik (şebekeden)",
+        EmissionSource.NaturalGas => "Doğal gaz",
+        EmissionSource.Diesel => "Motorin (dizel)",
+        EmissionSource.Gasoline => "Benzin",
+        EmissionSource.Lpg => "LPG",
+        EmissionSource.Coke => "Kok kömürü",
+        EmissionSource.Lignite => "Linyit",
+        _ => source.ToString()
+    };
+
+    public static string EmissionScopeName(EmissionScope scope) => scope switch
+    {
+        EmissionScope.Scope1 => "Kapsam 1 (doğrudan)",
+        EmissionScope.Scope2 => "Kapsam 2 (satın alınan elektrik)",
+        _ => scope.ToString()
+    };
 }

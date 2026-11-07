@@ -15,6 +15,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ---------- İş mantığı servisleri (her HTTP isteği için yeni örnek) ----------
 builder.Services.AddScoped<IAssessmentService, AssessmentService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<ICarbonFootprintService, CarbonFootprintService>();
+
+// Saat: testlerde sabit tarih verilebilsin diye doğrudan DateTime.UtcNow yerine TimeProvider kullanılır.
+builder.Services.AddSingleton(TimeProvider.System);
 
 // ---------- Controller'lar ----------
 // Enum'lar JSON'da sayı yerine metin olarak yazılır ("EnergyEfficiency")

@@ -25,7 +25,7 @@ backend/
 ├── EkoTwin.sln                 Çözüm dosyası (API + testler)
 ├── EkoTwin/                    API projesi
 │   ├── Controllers/            HTTP uç noktaları
-│   ├── Data/                   AppDbContext ve başlangıç verisi (16 soru)
+│   ├── Data/                   AppDbContext ve başlangıç verisi (16 soru, 20 öneri, 7 emisyon faktörü)
 │   ├── Dtos/                   API'nin alıp verdiği veri şablonları
 │   ├── Infrastructure/         Hata yönetimi, sağlık kontrolü çıktısı
 │   ├── Migrations/             Veritabanı şeması geçmişi (otomatik üretilir)
@@ -90,11 +90,17 @@ dotnet run --launch-profile http
 | GET | `/api/companies/{id}` | Tek bir firmayı getirir |
 | POST | `/api/companies` | Firma ekler |
 | PUT | `/api/companies/{id}` | Firmayı günceller (tüm alanlar gönderilir) |
-| DELETE | `/api/companies/{id}` | Firmayı ve **tüm değerlendirmelerini** kalıcı olarak siler |
+| DELETE | `/api/companies/{id}` | Firmayı, **tüm değerlendirmelerini ve karbon kayıtlarını** kalıcı olarak siler |
 | GET | `/api/companies/{id}/assessments` | Firmanın geçmiş değerlendirmeleri (yeniden eskiye) |
 | POST | `/api/assessments` | 16 yanıtı alır, skorları hesaplar, kaydeder |
 | GET | `/api/assessments/{id}` | Değerlendirme raporu |
 | GET | `/api/recommendations` | Öneri kütüphanesi (20 şablon) |
+| GET | `/api/emission-factors` | Emisyon faktörleri (kaynak, birim, faktör, resmi kaynak) |
+| GET | `/api/companies/{id}/carbon-footprints` | Firmanın yıllık karbon kayıtları (yeniden eskiye) |
+| POST | `/api/companies/{id}/carbon-footprints` | Yıllık karbon hesabı (aynı yıl varsa **409**) |
+| GET | `/api/carbon-footprints/{id}` | Karbon ayak izi raporu |
+| PUT | `/api/carbon-footprints/{id}` | Hesabı yeni değerlerle yeniden yapar |
+| DELETE | `/api/carbon-footprints/{id}` | Karbon kaydını siler |
 | GET | `/api/lookups/sectors` | Sektör listesi (değer + Türkçe ad) |
 | GET | `/api/lookups/cbam-product-groups` | CBAM ürün grupları |
 | GET | `/api/lookups/dimensions` | 4 boyut |
@@ -241,6 +247,58 @@ Firma kaydında iki alan kullanılır:
 
 Kurallar: [`EkoTwin/Services/CbamRiskEvaluator.cs`](EkoTwin/Services/CbamRiskEvaluator.cs)
 
+## Karbon hesaplayıcı (Kapsam 1 + 2)
+
+"Karbon salınımım ne?" sorusuna cevap verir. Firma **yıllık fatura değerlerini** girer, sistem
+GHG Protocol'e göre kurumsal karbon ayak izini hesaplar.
+
+| Kaynak | Birim | kg CO2e / birim | Kapsam |
+|---|---|---|---|
+| Elektrik (şebekeden) | kWh | 0,478 | 2 |
+| Doğal gaz | m³ | 1,9372 | 1 |
+| Motorin (dizel) | litre | 2,6853 | 1 |
+| Benzin | litre | 2,2952 | 1 |
+| LPG | kg | 2,9872 | 1 |
+| Kok kömürü | ton | 3.036,5055 | 1 |
+| Linyit | ton | 1.209,9623 | 1 |
+
+**Faktörlerin kaynağı**
+- Elektrik: T.C. Enerji ve Tabii Kaynaklar Bakanlığı, *2022 Yılı Elektrik Üretim ve Tüketim Noktası Emisyon
+  Faktörleri*, dağıtım hattına bağlı tüketim noktası (0,478 tCO2e/MWh).
+- Yakıtlar: IPCC 2006 Rehberi Cilt 2, Tablo 1.2 (alt ısıl değer) ve Tablo 2.3 (imalat sanayi sabit yanma);
+  CH4 ve N2O, IPCC AR5 küresel ısınma potansiyelleriyle (28 / 265) CO2e'ye çevrilir.
+  Doğal gaz için 9.155 kcal/Sm³ referans üst ısıl değer (EPDK/BOTAŞ) × 0,90 = alt ısıl değer.
+- Faktörler elle yazılmaz, bu parametrelerden hesaplanır: [`EkoTwin/Data/EmissionFactorSeed.cs`](EkoTwin/Data/EmissionFactorSeed.cs)
+
+**Hesap:** satır emisyonu (t) = miktar × faktör ÷ 1000 (3 hane). Kapsam 1 = yakıtlar, Kapsam 2 = elektrik.
+Toplam satırların toplamıdır; ayrıca çalışan başına emisyon, en büyük kaynak ve payı, kaynağa göre
+sade dilde yönlendirme, **önceki yılla karşılaştırma** ve CBAM kapsamındaki ihracatçılar için not döner.
+
+**Kurallar**
+- Firma başına yıl başına tek kayıt (veritabanında tekil index); gelecek yıl girilemez.
+- Her hesap kullandığı faktörü ve kaynağını satırında saklar: faktör güncellense de eski hesap değişmez.
+  PUT ile yeniden hesaplanırsa güncel faktörler kullanılır.
+
+**Sınırlar (raporda da gösterilir):** Kapsam 3, süreç emisyonları (kireçtaşı, elektrot vb.) ve soğutucu gaz
+kaçakları dahil değildir; sonuç ön değerlendirmedir, resmi beyan için akredite doğrulama gerekir.
+
+Örnek istek:
+
+```json
+POST /api/companies/{id}/carbon-footprints
+{
+  "year": 2025,
+  "entries": [
+    { "source": "Electricity", "quantity": 380000 },
+    { "source": "NaturalGas",  "quantity": 30000 },
+    { "source": "Coke",        "quantity": 160 },
+    { "source": "Diesel",      "quantity": 5500 }
+  ]
+}
+```
+
+Sonuç: Kapsam 1 = 558,726 t, Kapsam 2 = 181,64 t, toplam **740,366 t CO2e**; en büyük kaynak kok kömürü (%65,6).
+
 ## Testler
 
 `backend` klasöründe:
@@ -256,6 +314,9 @@ dotnet test
 - `GlobalExceptionHandlerTests` – hangi hatanın hangi HTTP koduna dönüştüğü
 - `RecommendationEngineTests` – tetikleme, aciliyet puanı, sıralama, en acil 3 adım, darboğaz ve CBAM etkisi
 - `RecommendationSeedTests` – öneri kütüphanesinin bütünlüğü (her soruya bir öneri, CBAM ifadeleri, kaynaksız yüzde yok)
+- `CarbonCalculatorTests` – karbon formülü, kapsam ayrımı, faktör değerlerinin IPCC parametrelerinden elle hesapla doğrulanması
+- `CarbonFootprintServiceTests` – kayıt, yıl çakışması, doğrulama, önceki yılla karşılaştırma, faktör snapshot'ı, CBAM notu
+- `CarbonApiTests` – karbon uç noktaları uçtan uca (201/400/404/409)
 - `ApiIntegrationTests` – uygulamayı HTTP üzerinden uçtan uca çalıştırır: sağlık kontrolü, CORS,
   hata yanıtları, firma uç noktaları, açılır listeler
 
