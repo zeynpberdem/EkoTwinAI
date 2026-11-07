@@ -1,0 +1,55 @@
+### EkoTwin API test istekleri
+### VS Code'da "REST Client" eklentisiyle her isteğin üstündeki "Send Request" bağlantısına tıklayın.
+### Önce uygulamayı çalıştırın:  dotnet run --launch-profile http
+
+@host = http://localhost:5268
+
+### 1) Soruları getir (16 soru; ID'leri buradan alın)
+GET {{host}}/api/questions
+Accept: application/json
+
+### 2) Firma ekle (dönen "id" değerini aşağıdaki companyId alanına yapıştırın)
+POST {{host}}/api/companies
+Content-Type: application/json
+
+{
+  "companyName": "Örnek Tekstil A.Ş.",
+  "sector": "Tekstil",
+  "employeeCount": 45
+}
+
+### 3) Firmaları listele
+GET {{host}}/api/companies
+
+### 4) Değerlendirme gönder (16 yanıt, puanlar 1-5)
+@companyId = BURAYA-FIRMA-ID
+POST {{host}}/api/assessments
+Content-Type: application/json
+
+{
+  "companyId": "{{companyId}}",
+  "answers": [
+    { "questionId": "00000000-0000-7000-8000-000000000001", "score": 4 },
+    { "questionId": "00000000-0000-7000-8000-000000000002", "score": 3 },
+    { "questionId": "00000000-0000-7000-8000-000000000003", "score": 5 },
+    { "questionId": "00000000-0000-7000-8000-000000000004", "score": 2 },
+    { "questionId": "00000000-0000-7000-8000-000000000005", "score": 3 },
+    { "questionId": "00000000-0000-7000-8000-000000000006", "score": 4 },
+    { "questionId": "00000000-0000-7000-8000-000000000007", "score": 2 },
+    { "questionId": "00000000-0000-7000-8000-000000000008", "score": 3 },
+    { "questionId": "00000000-0000-7000-8000-000000000009", "score": 1 },
+    { "questionId": "00000000-0000-7000-8000-000000000010", "score": 1 },
+    { "questionId": "00000000-0000-7000-8000-000000000011", "score": 2 },
+    { "questionId": "00000000-0000-7000-8000-000000000012", "score": 2 },
+    { "questionId": "00000000-0000-7000-8000-000000000013", "score": 3 },
+    { "questionId": "00000000-0000-7000-8000-000000000014", "score": 2 },
+    { "questionId": "00000000-0000-7000-8000-000000000015", "score": 4 },
+    { "questionId": "00000000-0000-7000-8000-000000000016", "score": 3 }
+  ]
+}
+
+### 5) Firmanın geçmiş değerlendirmeleri
+GET {{host}}/api/companies/{{companyId}}/assessments
+
+### 6) Tek bir değerlendirme raporu (4. adımda dönen "id")
+GET {{host}}/api/assessments/BURAYA-DEGERLENDIRME-ID

@@ -1,0 +1,31 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace EkoTwin.Models;
+
+/// <summary>
+/// İkiz dönüşüm değerlendirmesine tabi tutulan KOBİ'yi temsil eder.
+/// </summary>
+public class Company
+{
+    /// <summary>Birincil anahtar (UUID). PostgreSQL 18'in uuidv7() fonksiyonuyla zaman sıralı üretilir.</summary>
+    [Key]
+    public Guid Id { get; set; }
+
+    /// <summary>Firmanın ticari unvanı.</summary>
+    [Required]
+    [MaxLength(150)]
+    public string CompanyName { get; set; } = string.Empty;
+
+    /// <summary>Firmanın faaliyet gösterdiği sektör (örn. Otomotiv, Tekstil).</summary>
+    [MaxLength(100)]
+    public string Sector { get; set; } = string.Empty;
+
+    /// <summary>Çalışan sayısı.</summary>
+    public int EmployeeCount { get; set; }
+
+    /// <summary>Kayıt tarihi (UTC). Npgsql, timestamptz kolonları için UTC değer bekler.</summary>
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>Firmanın yaptığı değerlendirmeler (bire-çok).</summary>
+    public ICollection<Assessment> Assessments { get; set; } = new List<Assessment>();
+}
