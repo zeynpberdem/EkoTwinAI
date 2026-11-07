@@ -4,27 +4,50 @@
 
 @host = http://localhost:5268
 
-### 1) Soruları getir (16 soru; ID'leri buradan alın)
+### 0) Sistem ayakta mı? (uygulama + veritabanı)
+GET {{host}}/health
+
+### 1) Açılır listeler
+GET {{host}}/api/lookups/sectors
+
+###
+GET {{host}}/api/lookups/cbam-product-groups
+
+### 2) Soruları getir (16 soru; ID'leri buradan alın)
 GET {{host}}/api/questions
 Accept: application/json
 
-### 2) Firma ekle (dönen "id" değerini aşağıdaki companyId alanına yapıştırın)
+### 3) Firma ekle (dönen "id" değerini aşağıdaki @companyId satırına yapıştırın)
 POST {{host}}/api/companies
 Content-Type: application/json
 
 {
   "companyName": "Örnek Döküm Ltd. Şti.",
-  "sector": "Metal Döküm",
+  "sector": "MetalWorkingAndCasting",
+  "subSector": "Pik döküm",
   "employeeCount": 60,
   "exportsToEu": true,
   "cbamProductGroup": "IronAndSteel"
 }
 
-### 3) Firmaları listele
-GET {{host}}/api/companies
+### 4) Firmaları listele (filtreler isteğe bağlı)
+GET {{host}}/api/companies?sector=MetalWorkingAndCasting&search=döküm
 
-### 4) Değerlendirme gönder (16 yanıt, puanlar 1-5)
+### 5) Firma güncelle
 @companyId = BURAYA-FIRMA-ID
+PUT {{host}}/api/companies/{{companyId}}
+Content-Type: application/json
+
+{
+  "companyName": "Örnek Döküm A.Ş.",
+  "sector": "MetalWorkingAndCasting",
+  "subSector": "Pik döküm",
+  "employeeCount": 65,
+  "exportsToEu": true,
+  "cbamProductGroup": "IronAndSteel"
+}
+
+### 6) Değerlendirme gönder (16 yanıt, puanlar 1-5)
 POST {{host}}/api/assessments
 Content-Type: application/json
 
@@ -50,8 +73,11 @@ Content-Type: application/json
   ]
 }
 
-### 5) Firmanın geçmiş değerlendirmeleri
+### 7) Firmanın geçmiş değerlendirmeleri
 GET {{host}}/api/companies/{{companyId}}/assessments
 
-### 6) Tek bir değerlendirme raporu (4. adımda dönen "id")
+### 8) Tek bir değerlendirme raporu (6. adımda dönen "id")
 GET {{host}}/api/assessments/BURAYA-DEGERLENDIRME-ID
+
+### 9) Firmayı sil (DİKKAT: tüm değerlendirmeleri de silinir)
+DELETE {{host}}/api/companies/{{companyId}}

@@ -1,9 +1,7 @@
-using EkoTwin.Data;
 using EkoTwin.Dtos;
 using EkoTwin.Models;
 using EkoTwin.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace EkoTwin.Controllers;
 
@@ -11,59 +9,52 @@ namespace EkoTwin.Controllers;
 [Route("api/companies")]
 public class CompaniesController : ControllerBase
 {
-    private readonly AppDbContext _db;
+    private readonly ICompanyService _companies;
     private readonly IAssessmentService _assessments;
 
-    public CompaniesController(AppDbContext db, IAssessmentService assessments)
+    public CompaniesController(ICompanyService companies, IAssessmentService assessments)
     {
-        _db = db;
+        _companies = companies;
         _assessments = assessments;
     }
 
-    /// <summary>Tüm firmaları listeler (en yeni önce).</summary>
+    /// <summary>Firmaları listeler (en yeni önce). İsteğe bağlı: ?sector=TextileAndApparel&amp;search=döküm</summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CompanyResponse>>> GetAll(CancellationToken ct)
+    public async Task<ActionResult<IEnumerable<CompanyResponse>>> GetAll(
+        [FromQuery] SectorType? sector, [FromQuery] string? search, CancellationToken ct)
     {
-        var companies = await _db.Companies
-            .AsNoTracking()
-            .OrderByDescending(c => c.CreatedAt)
-            .Select(c => new CompanyResponse(c.Id, c.CompanyName, c.Sector, c.EmployeeCount, c.ExportsToEu, c.CbamProductGroup, c.CreatedAt))
-            .ToListAsync(ct);
-
-        return Ok(companies);
+        return Ok(await _companies.ListAsync(sector, search, ct));
     }
 
     /// <summary>Tek bir firmayı getirir.</summary>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<CompanyResponse>> GetById(Guid id, CancellationToken ct)
     {
-        var company = await _db.Companies
-            .AsNoTracking()
-            .Where(c => c.Id == id)
-            .Select(c => new CompanyResponse(c.Id, c.CompanyName, c.Sector, c.EmployeeCount, c.ExportsToEu, c.CbamProductGroup, c.CreatedAt))
-            .FirstOrDefaultAsync(ct);
-
+        var company = await _companies.GetAsync(id, ct);
         return company is null ? NotFound() : Ok(company);
     }
 
     /// <summary>Yeni firma kaydeder. Id'yi veritabanı (uuidv7) üretir.</summary>
     [HttpPost]
-    public async Task<ActionResult<CompanyResponse>> Create(CreateCompanyRequest request, CancellationToken ct)
+    public async Task<ActionResult<CompanyResponse>> Create(CompanyRequest request, CancellationToken ct)
     {
-        var company = new Company
-        {
-            CompanyName = request.CompanyName.Trim(),
-            Sector = request.Sector.Trim(),
-            EmployeeCount = request.EmployeeCount,
-            ExportsToEu = request.ExportsToEu,
-            CbamProductGroup = request.CbamProductGroup,
-            CreatedAt = DateTime.UtcNow
-        };
+        var company = await _companies.CreateAsync(request, ct);
+        return CreatedAtAction(nameof(GetById), new { id = company.Id }, company);
+    }
 
-        _db.Companies.Add(company);
-        await _db.SaveChangesAsync(ct);
+    /// <summary>Firma bilgilerini günceller (tüm alanlar gönderilir).</summary>
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<CompanyResponse>> Update(Guid id, CompanyRequest request, CancellationToken ct)
+    {
+        var company = await _companies.UpdateAsync(id, request, ct);
+        return company is null ? NotFound() : Ok(company);
+    }
 
-        return CreatedAtAction(nameof(GetById), new { id = company.Id }, CompanyResponse.From(company));
+    /// <summary>Firmayı ve tüm değerlendirmelerini kalıcı olarak siler.</summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        return await _companies.DeleteAsync(id, ct) ? NoContent() : NotFound();
     }
 
     /// <summary>Firmanın geçmiş değerlendirmelerini listeler (gelişimi izlemek için).</summary>

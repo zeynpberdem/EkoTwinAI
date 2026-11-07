@@ -26,7 +26,14 @@ public class AppDbContext : DbContext
         {
             entity.Property(c => c.Id).HasDefaultValueSql("uuidv7()");
 
-            // Enum veritabanında metin olarak saklanır: "None", "IronAndSteel" vb.
+            // Enum'lar veritabanında metin olarak saklanır: "TextileAndApparel", "IronAndSteel" vb.
+            entity.Property(c => c.Sector)
+                  .HasConversion<string>()
+                  .HasMaxLength(50);
+
+            // Sektöre göre filtreleme ve karşılaştırma için index
+            entity.HasIndex(c => c.Sector);
+
             entity.Property(c => c.CbamProductGroup)
                   .HasConversion<string>()
                   .HasMaxLength(30);

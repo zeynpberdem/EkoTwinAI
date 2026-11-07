@@ -16,9 +16,12 @@ public class Company
     [MaxLength(150)]
     public string CompanyName { get; set; } = string.Empty;
 
-    /// <summary>Firmanın faaliyet gösterdiği sektör (örn. Otomotiv, Tekstil).</summary>
+    /// <summary>Firmanın faaliyet gösterdiği sektör (standart listeden).</summary>
+    public SectorType Sector { get; set; }
+
+    /// <summary>İsteğe bağlı alt sektör / ayrıntı (örn. "Alüminyum döküm", "Ofis mobilyası").</summary>
     [MaxLength(100)]
-    public string Sector { get; set; } = string.Empty;
+    public string SubSector { get; set; } = string.Empty;
 
     /// <summary>Çalışan sayısı.</summary>
     public int EmployeeCount { get; set; }

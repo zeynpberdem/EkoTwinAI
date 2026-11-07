@@ -27,6 +27,7 @@ backend/
 │   ├── Controllers/            HTTP uç noktaları
 │   ├── Data/                   AppDbContext ve başlangıç verisi (16 soru)
 │   ├── Dtos/                   API'nin alıp verdiği veri şablonları
+│   ├── Infrastructure/         Hata yönetimi, sağlık kontrolü çıktısı
 │   ├── Migrations/             Veritabanı şeması geçmişi (otomatik üretilir)
 │   ├── Models/                 Veritabanı tabloları (entity'ler)
 │   ├── Services/               İş mantığı ve skor hesaplama
@@ -85,12 +86,49 @@ dotnet run --launch-profile http
 | Metot | Adres | Açıklama |
 |---|---|---|
 | GET | `/api/questions` | 16 aktif soruyu sırasıyla getirir |
-| GET | `/api/companies` | Firmaları listeler |
+| GET | `/api/companies` | Firmaları listeler. Filtre: `?sector=FoodAndBeverage&search=keban` |
 | GET | `/api/companies/{id}` | Tek bir firmayı getirir |
 | POST | `/api/companies` | Firma ekler |
+| PUT | `/api/companies/{id}` | Firmayı günceller (tüm alanlar gönderilir) |
+| DELETE | `/api/companies/{id}` | Firmayı ve **tüm değerlendirmelerini** kalıcı olarak siler |
 | GET | `/api/companies/{id}/assessments` | Firmanın geçmiş değerlendirmeleri (yeniden eskiye) |
 | POST | `/api/assessments` | 16 yanıtı alır, skorları hesaplar, kaydeder |
 | GET | `/api/assessments/{id}` | Değerlendirme raporu |
+| GET | `/api/lookups/sectors` | Sektör listesi (değer + Türkçe ad) |
+| GET | `/api/lookups/cbam-product-groups` | CBAM ürün grupları |
+| GET | `/api/lookups/dimensions` | 4 boyut |
+| GET | `/health` | Uygulama ve veritabanı durumu (200 Healthy / 503 Unhealthy) |
+
+### Sektörler
+
+Sektör serbest metin değil, standart listeden seçilir (sektörel karşılaştırma için gerekli).
+Ayrıntı gerekiyorsa isteğe bağlı `subSector` alanına yazılır (örn. "Alüminyum döküm").
+
+`MetalWorkingAndCasting` Metal İşleme ve Döküm · `MachineryAndEquipment` Makine ve Ekipman ·
+`AutomotiveSupply` Otomotiv Yan Sanayi · `FurnitureAndWood` Mobilya ve Ağaç Ürünleri ·
+`FoodAndBeverage` Gıda ve İçecek · `TextileAndApparel` Tekstil ve Hazır Giyim ·
+`MiningAndMarble` Madencilik ve Mermer · `ConstructionMaterials` Yapı Malzemeleri ·
+`ChemicalsAndPlastics` Kimya ve Plastik · `ElectricalAndElectronics` Elektrik ve Elektronik ·
+`Energy` Enerji · `Other` Diğer
+
+### Hata yanıtları
+
+Tüm hatalar standart **ProblemDetails** (RFC 9457) biçiminde, Türkçe başlıkla döner:
+
+| Kod | Ne zaman |
+|---|---|
+| 400 | Doğrulama hatası (alan adına göre `errors` listesi ile) |
+| 404 | Kayıt veya adres bulunamadı |
+| 500 | Beklenmeyen hata (ayrıntı loglara yazılır) |
+| 503 | Veritabanına ulaşılamıyor |
+
+Geliştirme ortamında yanıta teknik ayrıntı (`exception`) eklenir; canlı ortamda eklenmez.
+
+### CORS
+
+Frontend'in API'yi çağırabileceği adresler `Cors:AllowedOrigins` ayarındadır.
+Geliştirmede (`appsettings.Development.json`) `localhost:5173` (Vite), `:3000` (React) ve `:4200` (Angular) izinlidir.
+Canlı ortamda liste boştur; frontend'in gerçek adresi eklenmelidir.
 
 Hazır örnek istekler için: [`EkoTwin/EkoTwin.http`](EkoTwin/EkoTwin.http)
 
@@ -167,8 +205,14 @@ dotnet test
 - `ScoreCalculatorTests` – formül, yuvarlama, olgunluk seviyesi sınır değerleri
 - `AssessmentServiceTests` – kayıt, skor hesaplama, eksik/tekrarlı/geçersiz yanıt kontrolleri
 - `CbamRiskEvaluatorTests` – CBAM kapsamı, risk seviyesi sınır değerleri, öneriler
+- `CompanyServiceTests` – firma ekleme, güncelleme, silme, sektör/ad filtresi
+- `GlobalExceptionHandlerTests` – hangi hatanın hangi HTTP koduna dönüştüğü
+- `ApiIntegrationTests` – uygulamayı HTTP üzerinden uçtan uca çalıştırır: sağlık kontrolü, CORS,
+  hata yanıtları, firma uç noktaları, açılır listeler
 
 Testler gerçek veritabanına dokunmaz; her test bellekte (InMemory) geçici bir veritabanı kullanır.
+InMemory, PostgreSQL'e özgü kuralları (CHECK kısıtı, CASCADE silme, `uuidv7()`) uygulamaz;
+bunlar gerçek veritabanında ayrıca denenmiştir.
 
 ## Sık kullanılan komutlar
 

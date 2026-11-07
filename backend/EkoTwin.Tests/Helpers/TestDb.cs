@@ -35,7 +35,7 @@ public static class TestDb
         var company = new Company
         {
             CompanyName = name,
-            Sector = "Tekstil",
+            Sector = SectorType.TextileAndApparel,
             EmployeeCount = 45,
             ExportsToEu = exportsToEu,
             CbamProductGroup = cbamProductGroup

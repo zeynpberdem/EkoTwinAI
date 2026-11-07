@@ -119,10 +119,17 @@ namespace EkoTwin.Migrations
 
                     b.Property<string>("Sector")
                         .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("SubSector")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Sector");
 
                     b.ToTable("Companies");
                 });
