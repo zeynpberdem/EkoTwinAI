@@ -3,15 +3,25 @@ using EkoTwin.Services;
 
 namespace EkoTwin.Dtos;
 
-/// <summary>Raporda tek bir öneri.</summary>
+/// <summary>
+/// Raporda tek bir öneri. Arayüz KOBİ sahibine Simple* alanlarını gösterir
+/// (sade başlık, ne kazandırır, sade gerekçeler); teknik alanlar danışman görünümü ve PDF içindir.
+/// </summary>
 public record RecommendationResponse(
     int Rank,
     bool IsTopPriority,
     RecommendationTrigger TriggerType,
     Dimension Dimension,
     string DimensionName,
+    string DimensionSimpleName,
     int? QuestionNumber,
     int? AnswerScore,
+    string? AnswerLabel,
+    string SimpleTitle,
+    string SimpleBenefit,
+    string? SimpleCbamNote,
+    string SimpleCostText,
+    IReadOnlyList<string> SimpleReasons,
     string Title,
     string Rationale,
     string? CbamNote,
@@ -35,8 +45,16 @@ public record RecommendationResponse(
         r.TriggerType,
         r.Dimension,
         Lookups.DimensionName(r.Dimension),
+        ScoreCalculator.SimpleName(r.Dimension),
         r.QuestionNumber,
         r.AnswerScore,
+        r.AnswerLabel,
+        // Sade alanlar eklenmeden önce üretilmiş eski raporlarda teknik başlığa düşülür.
+        string.IsNullOrEmpty(r.SimpleTitle) ? r.Title : r.SimpleTitle,
+        r.SimpleBenefit,
+        r.SimpleCbamNote,
+        Lookups.SimpleCostText(r.CostLevel),
+        r.SimpleReasons.Split('\n', StringSplitOptions.RemoveEmptyEntries),
         r.Title,
         r.Rationale,
         r.CbamNote,
@@ -73,6 +91,9 @@ public record RecommendationTemplateResponse(
     string Title,
     string Rationale,
     string? CbamNote,
+    string SimpleTitle,
+    string SimpleBenefit,
+    string? SimpleCbamNote,
     string PriorityName,
     string CostLevelName,
     string ImpactLevelName,

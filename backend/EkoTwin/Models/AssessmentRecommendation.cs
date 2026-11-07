@@ -47,6 +47,22 @@ public class AssessmentRecommendation
     [MaxLength(500)]
     public string? CbamNote { get; set; }
 
+    /// <summary>Sade başlık (rapor anındaki hâli).</summary>
+    [MaxLength(150)]
+    public string SimpleTitle { get; set; } = string.Empty;
+
+    /// <summary>"Ne kazandırır?" (rapor anındaki hâli).</summary>
+    [MaxLength(300)]
+    public string SimpleBenefit { get; set; } = string.Empty;
+
+    /// <summary>Sade CBAM notu (yalnızca kapsamdaki ihracatçılara).</summary>
+    [MaxLength(300)]
+    public string? SimpleCbamNote { get; set; }
+
+    /// <summary>Seçilen cevabın metni (soru bazlı önerilerde), örn. "Hayır, hiç hesaplamadık".</summary>
+    [MaxLength(150)]
+    public string? AnswerLabel { get; set; }
+
     /// <summary>Firmaya göre ayarlanmış öncelik.</summary>
     public Level Priority { get; set; }
 
@@ -63,4 +79,8 @@ public class AssessmentRecommendation
     /// <summary>Neden bu sırada olduğu; satır satır (\n ile ayrılmış).</summary>
     [MaxLength(1000)]
     public string Reasons { get; set; } = string.Empty;
+
+    /// <summary>Gerekçelerin sade hâli; satır satır (\n ile ayrılmış).</summary>
+    [MaxLength(1000)]
+    public string SimpleReasons { get; set; } = string.Empty;
 }

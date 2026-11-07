@@ -362,6 +362,20 @@ Seçenekler görüş değil davranış sorar ("ne yapıyorsunuz?") ve 1'den 5'e 
 Skor hesabı değişmez. Raporda her yanıtın seçilen cevap metni (`answerLabel`), boyutların sade adı
 (Dijital düzen, Enerji tasarrufu, Karbon takibi, Tedarikçiler ve malzeme) ve sade seviye adı döner.
 
+**Öneriler** (raporda ve `GET /api/recommendations`): her öneride teknik alanların yanında
+
+| Alan | Örnek |
+|---|---|
+| `simpleTitle` | "Firmanızın yıllık karbonunu hesaplayın" |
+| `simpleBenefit` | "Müşteri veya banka sorduğunda cevabınız hazır olur." |
+| `simpleCbamNote` | Avrupa notu; yalnızca CBAM kapsamındaki ihracatçılara |
+| `simpleReasons` | "Cevabınız: \"Hayır, hiç hesaplamadık\"", "En çok zorlandığınız konu: Karbon takibi", "Az masraflı" |
+| `simpleCostText` | Az masraflı / Orta masraflı / Yüksek masraflı |
+| `answerLabel` | Öneriyi tetikleyen seçilen cevap |
+
+Sade alanlar da rapor anındaki hâliyle saklanır (snapshot). Bu özellikten önce üretilmiş raporlara
+migration sırasında şablondan sade başlık ve kazanım kopyalanır.
+
 **Ölçüm ve koruma** ([`QuestionSeedTests`](EkoTwin.Tests/QuestionSeedTests.cs))
 - Jargon testi: sade soru ve seçeneklerde ERP, CBAM, emisyon, entegre vb. geçemez.
 - Uzunluk: sade soru ≤ 15 kelime, seçenek ≤ 10 kelime.
@@ -374,6 +388,8 @@ Skor hesabı değişmez. Raporda her yanıtın seçilen cevap metni (`answerLabe
 | Sade soru metinleri | 58,4 | Orta güçlükte |
 | Cevap seçenekleri | 77,1 | Kolay (test eşiği ≥ 70) |
 | "Bu ne demek?" açıklamaları | 63,9 | Orta güçlükte (test eşiği ≥ 50) |
+| Öneri açıklamaları (teknik `rationale`) | 37,1 | Zor |
+| Öneri kazanımları (sade `simpleBenefit`) | 64,0 | Orta güçlükte (test eşiği ≥ 50) |
 
 Not: Ateşman yalnızca kelime/cümle uzunluğuna bakar. "ERP", "LCA" gibi kısaltmaları kısa (kolay) sayar,
 uzun Türkçe kelimeleri cezalandırır. Bu yüzden resmi ve sade sorular arasındaki fark küçük çıkar; asıl
@@ -403,6 +419,7 @@ dotnet test
 - `ProgressApiTests` – gelişim, karşılaştırma ve hedef uç noktaları uçtan uca
 - `QuestionSeedTests` – soru/seçenek yapısı, jargon yasağı, uzunluk sınırları, okunabilirlik
 - `ReadabilityTests` – Ateşman formülünün elle hesapla doğrulanması
+- `RecommendationSimpleLanguageTests` – öneri sade metinleri (jargon, uzunluk, okunabilirlik) ve sade gerekçeler
 - `SimpleLanguageApiTests` – sade metin, açıklama, seçenekler ve rapordaki cevap metni uçtan uca
 - `ApiIntegrationTests` – uygulamayı HTTP üzerinden uçtan uca çalıştırır: sağlık kontrolü, CORS,
   hata yanıtları, firma uç noktaları, açılır listeler

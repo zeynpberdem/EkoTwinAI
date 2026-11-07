@@ -55,6 +55,18 @@ public class Recommendation
     [MaxLength(500)]
     public string? CbamNote { get; set; }
 
+    /// <summary>KOBİ sahibine gösterilen sade başlık.</summary>
+    [MaxLength(150)]
+    public string SimpleTitle { get; set; } = string.Empty;
+
+    /// <summary>"Ne kazandırır?" — tek-iki kısa cümle, sade dil.</summary>
+    [MaxLength(300)]
+    public string SimpleBenefit { get; set; } = string.Empty;
+
+    /// <summary>CBAM notunun sade hâli (yalnızca CbamNote doluysa).</summary>
+    [MaxLength(300)]
+    public string? SimpleCbamNote { get; set; }
+
     /// <summary>Metindeki iddiaların kaynağı (varsa).</summary>
     [MaxLength(500)]
     public string? Source { get; set; }

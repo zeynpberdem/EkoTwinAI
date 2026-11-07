@@ -21,6 +21,62 @@ public static class RecommendationSeed
     // QuestionSeed ile aynı kimlikler (soru numarası → soru Id)
     private static Guid Q(int questionNumber) => Guid.Parse($"00000000-0000-7000-8000-{questionNumber:D12}");
 
+
+    /// <summary>
+    /// Sade dil metinleri (kullanıcı onaylı): öneri numarası → (sade başlık, ne kazandırır, sade CBAM notu).
+    /// CBAM notu yalnızca teknik CbamNote'u olan önerilerde bulunur.
+    /// </summary>
+    private static readonly Dictionary<int, (string Title, string Benefit, string? CbamNote)> Simple = new()
+    {
+        [1] = ("Muhasebe ve stoğu internetten çalışan bir programa taşıyın",
+               "Kayıtlar tek yerde durur, hata ve kayıp azalır.", null),
+        [2] = ("Önemli makinelerin çalışma ve duruş süresini kaydedin",
+               "Makinelerin neden durduğunu görür, boşa geçen zamanı azaltırsınız.", null),
+        [3] = ("Düzenli yedek alın, virüse karşı önlem kurun",
+               "Bilgisayar bozulsa da kayıtlarınız kaybolmaz.", null),
+        [4] = ("Çalışanlarınıza bilgisayar ve program eğitimi verin",
+               "Programlar daha doğru ve hızlı kullanılır.", null),
+        [5] = ("Makinelere elektrik harcamasını gösteren sayaç taktırın",
+               "En çok elektrik yakan makineyi görür, tasarrufa oradan başlarsınız.",
+               "Avrupalı alıcınız ürün başına ne kadar elektrik harcadığınızı soracak. Makine sayaçları bu bilgiyi verir."),
+        [6] = ("Lambaları LED'e çevirin, ısıtmayı ve soğutmayı ayarlı hâle getirin",
+               "Az masrafla elektrik ve yakıt faturası düşer.", null),
+        [7] = ("Hava kaçaklarını ve enerji israfını giderin",
+               "Aynı üretimi daha az enerjiyle yaparsınız.", null),
+        [8] = ("Tesisinizi bir enerji uzmanına inceletin",
+               "Nerede para kaçırdığınızı ölçülmüş bir raporla görürsünüz.", null),
+        [9] = ("Firmanızın yıllık karbonunu hesaplayın",
+               "Müşteri veya banka sorduğunda cevabınız hazır olur. EkoTwin'in hesaplayıcısıyla başlayabilirsiniz.",
+               "Avrupalı alıcınız ürünlerinizin karbon bilgisini isteyecek. Veremezseniz yüksek bir değer varsayılır ve fiyatta geri kalırsınız."),
+        [10] = ("Sattığınız ürünlerin karbonunu hesaplatın",
+                "Müşteri ürün başına karbon sorduğunda işi kaçırmazsınız.",
+                "Avrupa'ya sattığınız ürünlerin karbon bilgisi bu hesaba dayanır."),
+        [11] = ("Karbonu azaltmak için hedef koyun ve plan yazın",
+                "Neyi ne zamana kadar yapacağınız belli olur; ilerlemeyi EkoTwin'de izlersiniz.",
+                "Ürününüzün karbonu azaldıkça Avrupalı alıcının ödediği karbon bedeli düşer, siz de fiyatta öne geçersiniz."),
+        [12] = ("Avrupa'nın karbon kurallarının sizi nasıl etkilediğini öğrenin",
+                "Avrupa'ya satışlarınızı riske atmadan önceden hazırlanırsınız.",
+                "Bu kural 2026 başında yürürlüğe girdi. İlk yıllık beyan Eylül 2027'de. Kurallar değişebilir, takipte kalın."),
+        [13] = ("Malzeme aldığınız firmalara çevre konusunda birkaç basit soru sorun",
+                "Müşterileriniz sorduğunda tedarikçilerinizin bilgisi hazır olur.", null),
+        [14] = ("Sevkiyatları birleştirin, araçları dolu gönderin",
+                "Yakıt ve taşıma masrafı azalır.", null),
+        [15] = ("Yakındaki firmalardan daha çok malzeme alın",
+                "Taşıma süresi ve masrafı azalır, yerel ekonomi güçlenir.", null),
+        [16] = ("Geri dönüştürülmüş malzeme kullanımını artırın",
+                "Hammadde masrafı düşebilir, çevreci ürün sunarsınız.",
+                "Demir-çelik ve alüminyumda hurda kullanma oranı ürünün karbonunu doğrudan etkiler."),
+        [17] = ("Tüm işleri tek programda toplamak için plan yapın",
+                "Muhasebe, stok ve sipariş birbirine bağlanır, iş takibi kolaylaşır.", null),
+        [18] = ("Enerjiyi yönetmek için bir sorumlu ve bir plan belirleyin",
+                "Tasarruf tek seferlik kalmaz, her yıl devam eder.", null),
+        [19] = ("Karbon konusunda hemen bir yol haritası çıkarın",
+                "Avrupa kuralları ve müşteri talepleri sizi hazırlıksız yakalamaz.",
+                "Avrupa'ya bu kurala tabi ürün sattığınız için önce ürün başına karbon bilgisini çıkarmaya odaklanın."),
+        [20] = ("Malzeme alırken çevreyi de gözeten basit kurallar yazın",
+                "Tüm alımlarınızda aynı kurala göre karar verirsiniz.", null),
+    };
+
     private static Recommendation ForQuestion(int n, string title, string rationale,
         Level priority, Level cost, Level impact, ImpactType type, int minMonths, int maxMonths,
         string? cbamNote = null) => new()
@@ -37,7 +93,10 @@ public static class RecommendationSeed
         DurationMinMonths = minMonths,
         DurationMaxMonths = maxMonths,
         CbamRelevant = cbamNote is not null,
-        CbamNote = cbamNote
+        CbamNote = cbamNote,
+        SimpleTitle = Simple[n].Title,
+        SimpleBenefit = Simple[n].Benefit,
+        SimpleCbamNote = Simple[n].CbamNote
     };
 
     private static Recommendation ForDimension(int n, Dimension dimension, string title, string rationale,
@@ -56,7 +115,10 @@ public static class RecommendationSeed
         DurationMinMonths = minMonths,
         DurationMaxMonths = maxMonths,
         CbamRelevant = cbamNote is not null,
-        CbamNote = cbamNote
+        CbamNote = cbamNote,
+        SimpleTitle = Simple[n].Title,
+        SimpleBenefit = Simple[n].Benefit,
+        SimpleCbamNote = Simple[n].CbamNote
     };
 
     public static readonly Recommendation[] Recommendations =

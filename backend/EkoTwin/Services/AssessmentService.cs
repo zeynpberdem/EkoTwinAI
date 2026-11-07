@@ -22,6 +22,7 @@ public class AssessmentService : IAssessmentService
 
         // 2) Yanıtlar, aktif soruların tamamını tam olarak bir kez kapsıyor mu?
         var activeQuestions = await _db.Questions
+            .Include(q => q.Options)
             .Where(q => q.IsActive)
             .ToDictionaryAsync(q => q.Id, ct);
 
@@ -44,7 +45,8 @@ public class AssessmentService : IAssessmentService
             .Select(a =>
             {
                 var q = activeQuestions[a.QuestionId];
-                return new RecommendationEngine.AnswerInput(q.Id, q.DisplayOrder, q.Dimension, a.Score);
+                return new RecommendationEngine.AnswerInput(q.Id, q.DisplayOrder, q.Dimension, a.Score,
+                    q.Options.FirstOrDefault(o => o.Score == a.Score)?.Label);
             })
             .ToList();
 

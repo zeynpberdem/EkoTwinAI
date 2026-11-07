@@ -34,7 +34,7 @@ public static class RecommendationEngine
     public const int CbamBonus = 3;
 
     /// <summary>Bir sorunun yanıtı (motorun girdisi).</summary>
-    public record AnswerInput(Guid QuestionId, int QuestionNumber, Dimension Dimension, int Score);
+    public record AnswerInput(Guid QuestionId, int QuestionNumber, Dimension Dimension, int Score, string? AnswerLabel = null);
 
     /// <summary>
     /// Önerileri üretir ve sıralar. Dönen kayıtlar değerlendirmeye bağlanıp kaydedilir.
@@ -67,7 +67,10 @@ public static class RecommendationEngine
                 var severity = answer.Score == 1 ? 2 : 1;
                 actions.Add(Score(t, answer.Dimension, severity, bottlenecks, cbamRiskHigh,
                     firstReason: $"Soru {answer.QuestionNumber} yanıtınız: {answer.Score}/5",
-                    questionNumber: answer.QuestionNumber, answerScore: answer.Score,
+                    firstSimpleReason: answer.AnswerLabel is { } label
+                        ? $"Cevabınız: \"{label}\""
+                        : $"Soru {answer.QuestionNumber} cevabınız zayıf görünüyor",
+                    questionNumber: answer.QuestionNumber, answerScore: answer.Score, answerLabel: answer.AnswerLabel,
                     tieBreakValue: answer.Score));
             }
             else if (t.TriggerType == RecommendationTrigger.Dimension
@@ -78,7 +81,9 @@ public static class RecommendationEngine
                 var severity = dimScore < SevereDimensionThreshold ? 2 : 1;
                 strategic.Add(Score(t, dim, severity, bottlenecks, cbamRiskHigh,
                     firstReason: $"{ScoreCalculator.DisplayName(dim)} skorunuz {dimScore:0.##} (eşik: {DimensionTriggerThreshold:0})",
-                    questionNumber: null, answerScore: null,
+                    firstSimpleReason: $"{ScoreCalculator.SimpleName(dim)} puanınız 100 üzerinden " +
+                                       $"{Math.Round(dimScore, 0, MidpointRounding.AwayFromZero)}",
+                    questionNumber: null, answerScore: null, answerLabel: null,
                     tieBreakValue: dimScore));
             }
         }
@@ -107,15 +112,20 @@ public static class RecommendationEngine
         int Urgency,
         Level EffectivePriority,
         List<string> Reasons,
+        List<string> SimpleReasons,
         int? QuestionNumber,
         int? AnswerScore,
+        string? AnswerLabel,
         decimal TieBreakValue);
 
     private static Candidate Score(
         Recommendation t, Dimension dimension, int severity, IReadOnlySet<Dimension> bottlenecks, bool cbamRiskHigh,
-        string firstReason, int? questionNumber, int? answerScore, decimal tieBreakValue)
+        string firstReason, string firstSimpleReason, int? questionNumber, int? answerScore, string? answerLabel,
+        decimal tieBreakValue)
     {
+        // Her gerekçe iki dilde üretilir: teknik (danışman) ve sade (KOBİ sahibi).
         var reasons = new List<string> { firstReason };
+        var simple = new List<string> { firstSimpleReason };
 
         var urgency = (int)t.ImpactLevel * 2      // etki: 2/4/6
                       + (4 - (int)t.CostLevel)    // maliyet: düşük 3, orta 2, yüksek 1
@@ -126,6 +136,7 @@ public static class RecommendationEngine
         {
             urgency += BottleneckBonus;
             reasons.Add($"En zayıf boyutunuz: {ScoreCalculator.DisplayName(dimension)}");
+            simple.Add($"En çok zorlandığınız konu: {ScoreCalculator.SimpleName(dimension)}");
         }
 
         var priority = t.Priority;
@@ -134,12 +145,23 @@ public static class RecommendationEngine
             urgency += CbamBonus;
             priority = Level.High;
             reasons.Add("CBAM riskiniz yüksek");
+            simple.Add("Avrupa'ya sattığınız ürünler karbon kurallarından etkileniyor");
         }
 
-        if (t.CostLevel == Level.Low) reasons.Add("Düşük maliyet");
-        if (t.ImpactLevel == Level.High) reasons.Add("Yüksek etki");
+        if (t.CostLevel == Level.Low)
+        {
+            reasons.Add("Düşük maliyet");
+            simple.Add("Az masraflı");
+        }
 
-        return new Candidate(t, dimension, urgency, priority, reasons, questionNumber, answerScore, tieBreakValue);
+        if (t.ImpactLevel == Level.High)
+        {
+            reasons.Add("Yüksek etki");
+            simple.Add("Etkisi büyük");
+        }
+
+        return new Candidate(t, dimension, urgency, priority, reasons, simple, questionNumber, answerScore, answerLabel,
+            tieBreakValue);
     }
 
     private static IEnumerable<AssessmentRecommendation> Rank(List<Candidate> candidates, bool markTop, bool showCbamNotes)
@@ -165,13 +187,18 @@ public static class RecommendationEngine
             Title = c.Template.Title,
             Rationale = c.Template.Rationale,
             CbamNote = showCbamNotes ? c.Template.CbamNote : null,
+            SimpleTitle = c.Template.SimpleTitle,
+            SimpleBenefit = c.Template.SimpleBenefit,
+            SimpleCbamNote = showCbamNotes ? c.Template.SimpleCbamNote : null,
+            AnswerLabel = c.AnswerLabel,
             Priority = c.EffectivePriority,
             CostLevel = c.Template.CostLevel,
             ImpactLevel = c.Template.ImpactLevel,
             ImpactType = c.Template.ImpactType,
             DurationMinMonths = c.Template.DurationMinMonths,
             DurationMaxMonths = c.Template.DurationMaxMonths,
-            Reasons = string.Join('\n', c.Reasons)
+            Reasons = string.Join('\n', c.Reasons),
+            SimpleReasons = string.Join('\n', c.SimpleReasons)
         });
     }
 }

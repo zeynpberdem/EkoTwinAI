@@ -43,6 +43,15 @@ public static class Lookups
         _ => type.ToString()
     };
 
+    /// <summary>Maliyetin sade ifadesi: "Az masraflı" / "Orta masraflı" / "Yüksek masraflı".</summary>
+    public static string SimpleCostText(Level cost) => cost switch
+    {
+        Level.Low => "Az masraflı",
+        Level.Medium => "Orta masraflı",
+        Level.High => "Yüksek masraflı",
+        _ => cost.ToString()
+    };
+
     /// <summary>"1-3 ay" veya aynıysa "1 ay".</summary>
     public static string DurationText(int minMonths, int maxMonths) =>
         minMonths == maxMonths ? $"{minMonths} ay" : $"{minMonths}-{maxMonths} ay";

@@ -689,6 +689,10 @@ namespace EkoTwin.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("uuidv7()");
 
+                    b.Property<string>("AnswerLabel")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
                     b.Property<int?>("AnswerScore")
                         .HasColumnType("integer");
 
@@ -751,6 +755,25 @@ namespace EkoTwin.Migrations
 
                     b.Property<Guid?>("RecommendationId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("SimpleBenefit")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("SimpleCbamNote")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("SimpleReasons")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("SimpleTitle")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1342,6 +1365,20 @@ namespace EkoTwin.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<string>("SimpleBenefit")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("SimpleCbamNote")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("SimpleTitle")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
                     b.Property<string>("Source")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -1381,6 +1418,8 @@ namespace EkoTwin.Migrations
                             Priority = "High",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000001"),
                             Rationale = "Satış, stok ve faturaların kâğıt veya dağınık Excel dosyaları yerine tek bir sistemde tutulması veri giriş hatalarını ve stok kayıplarını azaltır, güncel duruma her an erişim sağlar. İleride entegre ERP'ye geçişin ilk adımıdır.",
+                            SimpleBenefit = "Kayıtlar tek yerde durur, hata ve kayıp azalır.",
+                            SimpleTitle = "Muhasebe ve stoğu internetten çalışan bir programa taşıyın",
                             Title = "Bulut tabanlı ön muhasebe ve stok yazılımına geçiş",
                             TriggerType = "Question"
                         },
@@ -1397,6 +1436,8 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000002"),
                             Rationale = "Makine duruşları, çevrim süreleri ve firelerin sensör veya basit veri toplama terminalleriyle anlık izlenmesi üretimdeki darboğazları görünür kılar. Tüm tesis yerine en kritik 1-2 makineyle başlanabilir.",
+                            SimpleBenefit = "Makinelerin neden durduğunu görür, boşa geçen zamanı azaltırsınız.",
+                            SimpleTitle = "Önemli makinelerin çalışma ve duruş süresini kaydedin",
                             Title = "Kritik makinelerde dijital üretim takibi",
                             TriggerType = "Question"
                         },
@@ -1413,6 +1454,8 @@ namespace EkoTwin.Migrations
                             Priority = "High",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000003"),
                             Rationale = "Düzenli ve en az bir kopyası farklı ortamda tutulan yedekleme, güncel güvenlik duvarı ve çok faktörlü kimlik doğrulama; fidye yazılımı gibi saldırılarda veri ve üretim kaybını önler. Kişisel veri işleyen firmalar için KVKK yükümlülükleri açısından da gereklidir.",
+                            SimpleBenefit = "Bilgisayar bozulsa da kayıtlarınız kaybolmaz.",
+                            SimpleTitle = "Düzenli yedek alın, virüse karşı önlem kurun",
                             Title = "Temel siber güvenlik ve yedekleme paketi",
                             TriggerType = "Question"
                         },
@@ -1429,6 +1472,8 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000004"),
                             Rationale = "Yazılım ve otomasyon yatırımlarının verim getirmesi, çalışanların bu araçları benimsemesine bağlıdır. Kısa, uygulamalı eğitimlerle başlanabilir; kamu ve meslek odası destekli eğitim programları araştırılmalıdır.",
+                            SimpleBenefit = "Programlar daha doğru ve hızlı kullanılır.",
+                            SimpleTitle = "Çalışanlarınıza bilgisayar ve program eğitimi verin",
                             Title = "Çalışanlar için dijital yetkinlik eğitim programı",
                             TriggerType = "Question"
                         },
@@ -1446,6 +1491,9 @@ namespace EkoTwin.Migrations
                             Priority = "High",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000005"),
                             Rationale = "Boşta çalışan makineleri, kaçak akımları ve pik saat tüketimini görünür kılar; enerji faturalarında ölçülebilir düşüş sağlar. Diğer tüm enerji verimliliği adımları için gereken verinin temelidir.",
+                            SimpleBenefit = "En çok elektrik yakan makineyi görür, tasarrufa oradan başlarsınız.",
+                            SimpleCbamNote = "Avrupalı alıcınız ürün başına ne kadar elektrik harcadığınızı soracak. Makine sayaçları bu bilgiyi verir.",
+                            SimpleTitle = "Makinelere elektrik harcamasını gösteren sayaç taktırın",
                             Title = "IoT tabanlı anlık enerji izleme ve sayaç entegrasyonu",
                             TriggerType = "Question"
                         },
@@ -1462,6 +1510,8 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000006"),
                             Rationale = "LED aydınlatma, hareket sensörleri ve akıllı termostatlar düşük riskli ve hızlı uygulanabilen yatırımlardır; enerji tüketimini üretimi etkilemeden azaltır.",
+                            SimpleBenefit = "Az masrafla elektrik ve yakıt faturası düşer.",
+                            SimpleTitle = "Lambaları LED'e çevirin, ısıtmayı ve soğutmayı ayarlı hâle getirin",
                             Title = "Aydınlatma ve iklimlendirmede verimli ekipmana geçiş",
                             TriggerType = "Question"
                         },
@@ -1478,6 +1528,8 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000007"),
                             Rationale = "Basınçlı hava kaçaklarının giderilmesi ile yüksek verimli motor ve hız kontrol cihazı (VFD) kullanımı düşük maliyetli başlangıçlardır. Döküm, fırın ve kurutma süreçlerinde atık ısının ön ısıtmada kullanılması ileri aşama bir adımdır.",
+                            SimpleBenefit = "Aynı üretimi daha az enerjiyle yaparsınız.",
+                            SimpleTitle = "Hava kaçaklarını ve enerji israfını giderin",
                             Title = "Basınçlı hava, motor ve atık ısı verimlilik iyileştirmeleri",
                             TriggerType = "Question"
                         },
@@ -1494,6 +1546,8 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000008"),
                             Rationale = "Yetkili bir enerji verimliliği danışmanlık firmasına yaptırılan etüt, tasarruf fırsatlarını yatırım geri dönüş süreleriyle birlikte önceliklendirir. Verimlilik projelerine yönelik destek başvurularında da temel belge olarak kullanılır.",
+                            SimpleBenefit = "Nerede para kaçırdığınızı ölçülmüş bir raporla görürsünüz.",
+                            SimpleTitle = "Tesisinizi bir enerji uzmanına inceletin",
                             Title = "Enerji verimliliği etüdü yaptırılması",
                             TriggerType = "Question"
                         },
@@ -1511,6 +1565,9 @@ namespace EkoTwin.Migrations
                             Priority = "High",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000009"),
                             Rationale = "Yakıt, doğalgaz ve elektrik faturalarından yıllık sera gazı emisyonunuzu hesaplamak karbon yönetiminin ilk adımıdır. Resmi emisyon katsayıları ve hesaplama araçlarıyla düşük maliyetle yapılabilir.",
+                            SimpleBenefit = "Müşteri veya banka sorduğunda cevabınız hazır olur. EkoTwin'in hesaplayıcısıyla başlayabilirsiniz.",
+                            SimpleCbamNote = "Avrupalı alıcınız ürünlerinizin karbon bilgisini isteyecek. Veremezseniz yüksek bir değer varsayılır ve fiyatta geri kalırsınız.",
+                            SimpleTitle = "Firmanızın yıllık karbonunu hesaplayın",
                             Title = "Kurumsal karbon ayak izi hesabı (Kapsam 1 ve 2)",
                             TriggerType = "Question"
                         },
@@ -1528,6 +1585,9 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000010"),
                             Rationale = "En çok satan ürününüzün yaşam döngüsü boyunca oluşturduğu emisyonu ölçmek; yeşil ürün beyanı, ihale ve müşteri taleplerine cevap verebilmenizi sağlar. Uzmanlık gerektirir; kurumsal hesap yapıldıktan sonra tek bir üründen başlanması önerilir.",
+                            SimpleBenefit = "Müşteri ürün başına karbon sorduğunda işi kaçırmazsınız.",
+                            SimpleCbamNote = "Avrupa'ya sattığınız ürünlerin karbon bilgisi bu hesaba dayanır.",
+                            SimpleTitle = "Sattığınız ürünlerin karbonunu hesaplatın",
                             Title = "Ürün bazlı karbon ayak izi (LCA) çalışması",
                             TriggerType = "Question"
                         },
@@ -1545,6 +1605,9 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000011"),
                             Rationale = "Ölçülen emisyonlara dayanan, yıllara yayılmış somut hedefler (enerji verimliliği, yenilenebilir elektrik, yakıt değişimi gibi) yatırımları önceliklendirir ve müşterilere taahhüt olarak sunulabilir.",
+                            SimpleBenefit = "Neyi ne zamana kadar yapacağınız belli olur; ilerlemeyi EkoTwin'de izlersiniz.",
+                            SimpleCbamNote = "Ürününüzün karbonu azaldıkça Avrupalı alıcının ödediği karbon bedeli düşer, siz de fiyatta öne geçersiniz.",
+                            SimpleTitle = "Karbonu azaltmak için hedef koyun ve plan yazın",
                             Title = "Karbon azaltım hedefi ve yol haritası belirlenmesi",
                             TriggerType = "Question"
                         },
@@ -1562,6 +1625,9 @@ namespace EkoTwin.Migrations
                             Priority = "High",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000012"),
                             Rationale = "Ürünlerinizin AB düzenlemelerinden nasıl etkilendiğini, müşterilerinizin hangi veriyi hangi formatta isteyeceğini ve Türkiye'deki iklim mevzuatındaki gelişmeleri düzenli takip etmek; sürpriz maliyet ve müşteri kaybı riskini azaltır.",
+                            SimpleBenefit = "Avrupa'ya satışlarınızı riske atmadan önceden hazırlanırsınız.",
+                            SimpleCbamNote = "Bu kural 2026 başında yürürlüğe girdi. İlk yıllık beyan Eylül 2027'de. Kurallar değişebilir, takipte kalın.",
+                            SimpleTitle = "Avrupa'nın karbon kurallarının sizi nasıl etkilediğini öğrenin",
                             Title = "AB Yeşil Mutabakatı ve SKDM (CBAM) uyum değerlendirmesi",
                             TriggerType = "Question"
                         },
@@ -1578,6 +1644,8 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000013"),
                             Rationale = "Tedarikçi seçiminde fiyat ve kalitenin yanına çevre ve sürdürülebilirlik kriterlerinin eklenmesi, tedarik zincirinden kaynaklanan dolaylı emisyonları (Kapsam 3) düşürür ve yeşil kriter arayan müşteri ve ihalelere erişimi kolaylaştırır.",
+                            SimpleBenefit = "Müşterileriniz sorduğunda tedarikçilerinizin bilgisi hazır olur.",
+                            SimpleTitle = "Malzeme aldığınız firmalara çevre konusunda birkaç basit soru sorun",
                             Title = "Yeşil tedarikçi değerlendirme kriterlerinin oluşturulması",
                             TriggerType = "Question"
                         },
@@ -1594,6 +1662,8 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000014"),
                             Rationale = "Sevkiyatların birleştirilmesi, boş dönüşlerin azaltılması ve rota planlama araçlarının kullanılması yakıt maliyetini ve taşımacılık kaynaklı emisyonları birlikte düşürür.",
+                            SimpleBenefit = "Yakıt ve taşıma masrafı azalır.",
+                            SimpleTitle = "Sevkiyatları birleştirin, araçları dolu gönderin",
                             Title = "Lojistik planlama ve rota optimizasyonu",
                             TriggerType = "Question"
                         },
@@ -1610,6 +1680,8 @@ namespace EkoTwin.Migrations
                             Priority = "Low",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000015"),
                             Rationale = "Aynı il veya OSB'deki tedarikçilere öncelik vermek taşıma mesafesini ve teslim sürelerini kısaltır, tedarik kesintisi riskini azaltır. Karar verilirken fiyat ve kaliteyle birlikte değerlendirilmelidir.",
+                            SimpleBenefit = "Taşıma süresi ve masrafı azalır, yerel ekonomi güçlenir.",
+                            SimpleTitle = "Yakındaki firmalardan daha çok malzeme alın",
                             Title = "Yerel tedarikçi ağının geliştirilmesi",
                             TriggerType = "Question"
                         },
@@ -1627,6 +1699,9 @@ namespace EkoTwin.Migrations
                             Priority = "Medium",
                             QuestionId = new Guid("00000000-0000-7000-8000-000000000016"),
                             Rationale = "İkincil hammadde ve geri dönüştürülmüş ambalaj kullanımı hammadde maliyetini ve ürünün karbon ayak izini düşürebilir. Kalite gereksinimleri korunarak kademeli olarak artırılmalıdır.",
+                            SimpleBenefit = "Hammadde masrafı düşebilir, çevreci ürün sunarsınız.",
+                            SimpleCbamNote = "Demir-çelik ve alüminyumda hurda kullanma oranı ürünün karbonunu doğrudan etkiler.",
+                            SimpleTitle = "Geri dönüştürülmüş malzeme kullanımını artırın",
                             Title = "Geri dönüştürülmüş ve çevre dostu malzeme kullanımının artırılması",
                             TriggerType = "Question"
                         },
@@ -1643,6 +1718,8 @@ namespace EkoTwin.Migrations
                             IsActive = true,
                             Priority = "High",
                             Rationale = "Dijital altyapınız temel seviyede. Süreçleri aşamalı olarak tek bir entegre sistemde birleştiren bir plan (önce muhasebe ve stok, ardından üretim ve müşteri yönetimi) hazırlanmalı; kamu dijitalleşme destekleri araştırılmalıdır.",
+                            SimpleBenefit = "Muhasebe, stok ve sipariş birbirine bağlanır, iş takibi kolaylaşır.",
+                            SimpleTitle = "Tüm işleri tek programda toplamak için plan yapın",
                             Title = "Dijital dönüşüm yol haritası ve entegre ERP/CRM planı",
                             TriggerType = "Dimension"
                         },
@@ -1659,6 +1736,8 @@ namespace EkoTwin.Migrations
                             IsActive = true,
                             Priority = "High",
                             Rationale = "Enerji verimliliğiniz düşük seviyede. Bir enerji sorumlusu atanması, tüketimin düzenli izlenmesi ve yıllık iyileştirme hedeflerinden oluşan bir yönetim sistemi, tek seferlik önlemlerin kalıcı tasarrufa dönüşmesini sağlar.",
+                            SimpleBenefit = "Tasarruf tek seferlik kalmaz, her yıl devam eder.",
+                            SimpleTitle = "Enerjiyi yönetmek için bir sorumlu ve bir plan belirleyin",
                             Title = "Enerji yönetim sistemi kurulması (ISO 50001 yaklaşımı)",
                             TriggerType = "Dimension"
                         },
@@ -1676,6 +1755,9 @@ namespace EkoTwin.Migrations
                             IsActive = true,
                             Priority = "High",
                             Rationale = "Karbon yönetiminde temel adımlar eksik. Önce kurumsal emisyon hesabı, ardından azaltım hedefleri ve ürün bazlı hesap şeklinde aşamalı bir plan hazırlanmalı; iklim düzenlemeleri ve müşteri talepleri bu alanı giderek zorunlu hale getirmektedir.",
+                            SimpleBenefit = "Avrupa kuralları ve müşteri talepleri sizi hazırlıksız yakalamaz.",
+                            SimpleCbamNote = "Avrupa'ya bu kurala tabi ürün sattığınız için önce ürün başına karbon bilgisini çıkarmaya odaklanın.",
+                            SimpleTitle = "Karbon konusunda hemen bir yol haritası çıkarın",
                             Title = "Karbon yönetimi için acil yol haritası",
                             TriggerType = "Dimension"
                         },
@@ -1692,6 +1774,8 @@ namespace EkoTwin.Migrations
                             IsActive = true,
                             Priority = "Medium",
                             Rationale = "Tedarik zinciri boyutunuz zayıf. Tedarikçi seçimi, lojistik planlama ve malzeme tercihlerini kapsayan yazılı bir sürdürülebilir tedarik politikası, müşterilerin artan tedarik zinciri denetimlerine hazırlık sağlar.",
+                            SimpleBenefit = "Tüm alımlarınızda aynı kurala göre karar verirsiniz.",
+                            SimpleTitle = "Malzeme alırken çevreyi de gözeten basit kurallar yazın",
                             Title = "Sürdürülebilir tedarik zinciri politikası",
                             TriggerType = "Dimension"
                         });
