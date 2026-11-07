@@ -26,6 +26,11 @@ public class AppDbContext : DbContext
         {
             entity.Property(c => c.Id).HasDefaultValueSql("uuidv7()");
 
+            // Enum veritabanında metin olarak saklanır: "None", "IronAndSteel" vb.
+            entity.Property(c => c.CbamProductGroup)
+                  .HasConversion<string>()
+                  .HasMaxLength(30);
+
             // Company (1) -> Assessment (N); firma silinirse değerlendirmeleri de silinir.
             entity.HasMany(c => c.Assessments)
                   .WithOne(a => a.Company)

@@ -129,6 +129,33 @@ Kurallar:
 
 Kurallar tek bir dosyada toplanmıştır: [`EkoTwin/Services/ScoreCalculator.cs`](EkoTwin/Services/ScoreCalculator.cs)
 
+## CBAM (SKDM) risk uyarısı
+
+"AB'ye ihracatta Sınırda Karbon Düzenlemesi'ne takılır mıyım?" sorusuna cevap verir.
+Her değerlendirme raporunda `cbamRisk` alanı olarak döner.
+
+Firma kaydında iki alan kullanılır:
+
+| Alan | Değerler |
+|---|---|
+| `exportsToEu` | `true` / `false` |
+| `cbamProductGroup` | `None` (kapsam dışı), `IronAndSteel`, `Aluminium`, `Cement`, `Fertilisers`, `Electricity`, `Hydrogen` |
+
+| Durum | Risk |
+|---|---|
+| Ürün grubu kapsam dışı (mobilya, tekstil, gıda vb.) | Kapsam dışı |
+| Kapsamda, AB'ye ihracat yok | Düşük |
+| Kapsamda + AB'ye ihracat, Karbon Yönetimi skoru < 40 | Yüksek |
+| Kapsamda + AB'ye ihracat, skor 40 – 69,99 | Orta |
+| Kapsamda + AB'ye ihracat, skor ≥ 70 | Düşük |
+
+- Kapsamdaki ürün grupları ve tarihler Tüzük (AB) 2023/956 ve onu değiştiren Tüzük (AB) 2025/2083'e dayanır
+  (kesin dönem 1 Ocak 2026'da başladı; ilk sertifika satışı Şubat 2027, ilk yıllık beyan 30 Eylül 2027).
+  **Mevzuat değişebilir; güncel metin kontrol edilmelidir.**
+- 40 / 70 eşikleri mevzuattan değil, EkoTwin'in tasarım kararından gelir.
+
+Kurallar: [`EkoTwin/Services/CbamRiskEvaluator.cs`](EkoTwin/Services/CbamRiskEvaluator.cs)
+
 ## Testler
 
 `backend` klasöründe:
@@ -139,6 +166,7 @@ dotnet test
 
 - `ScoreCalculatorTests` – formül, yuvarlama, olgunluk seviyesi sınır değerleri
 - `AssessmentServiceTests` – kayıt, skor hesaplama, eksik/tekrarlı/geçersiz yanıt kontrolleri
+- `CbamRiskEvaluatorTests` – CBAM kapsamı, risk seviyesi sınır değerleri, öneriler
 
 Testler gerçek veritabanına dokunmaz; her test bellekte (InMemory) geçici bir veritabanı kullanır.
 

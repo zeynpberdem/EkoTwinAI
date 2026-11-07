@@ -168,6 +168,7 @@ public class AssessmentService : IAssessmentService
             a.TotalScore,
             ScoreCalculator.MaturityLevel(a.TotalScore),
             dimensionScores,
+            CbamRiskEvaluator.Evaluate(a.Company.ExportsToEu, a.Company.CbamProductGroup, a.CarbonManagementScore),
             answers);
     }
 }

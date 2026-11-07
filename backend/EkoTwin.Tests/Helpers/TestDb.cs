@@ -26,9 +26,20 @@ public static class TestDb
     }
 
     /// <summary>Veritabanına örnek bir firma ekler.</summary>
-    public static async Task<Company> AddCompanyAsync(AppDbContext db, string name = "Test Tekstil A.Ş.")
+    public static async Task<Company> AddCompanyAsync(
+        AppDbContext db,
+        string name = "Test Tekstil A.Ş.",
+        bool exportsToEu = false,
+        CbamProductGroup cbamProductGroup = CbamProductGroup.None)
     {
-        var company = new Company { CompanyName = name, Sector = "Tekstil", EmployeeCount = 45 };
+        var company = new Company
+        {
+            CompanyName = name,
+            Sector = "Tekstil",
+            EmployeeCount = 45,
+            ExportsToEu = exportsToEu,
+            CbamProductGroup = cbamProductGroup
+        };
         db.Companies.Add(company);
         await db.SaveChangesAsync();
         return company;

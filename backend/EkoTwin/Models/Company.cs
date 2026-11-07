@@ -23,6 +23,12 @@ public class Company
     /// <summary>Çalışan sayısı.</summary>
     public int EmployeeCount { get; set; }
 
+    /// <summary>Firma AB ülkelerine ihracat yapıyor mu? (CBAM risk değerlendirmesi için)</summary>
+    public bool ExportsToEu { get; set; }
+
+    /// <summary>AB'ye satılan ana ürünün CBAM ürün grubu; kapsam dışıysa None.</summary>
+    public CbamProductGroup CbamProductGroup { get; set; } = CbamProductGroup.None;
+
     /// <summary>Kayıt tarihi (UTC). Npgsql, timestamptz kolonları için UTC değer bekler.</summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

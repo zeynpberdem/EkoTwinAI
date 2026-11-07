@@ -48,6 +48,37 @@ public class AssessmentServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_AbyeIhracatYapanMetalFirmasi_KarbonSkoruDusukse_CbamRiskiYuksek()
+    {
+        using var db = TestDb.Create();
+        var company = await TestDb.AddCompanyAsync(db, "Elazığ Döküm", exportsToEu: true,
+            cbamProductGroup: CbamProductGroup.IronAndSteel);
+        var service = new AssessmentService(db);
+
+        // Karbon soruları (9-12) hepsi 1 → Karbon Yönetimi skoru 0
+        var request = TestDb.BuildRequest(db, company.Id, n => n is >= 9 and <= 12 ? 1 : 4);
+
+        var result = await service.CreateAsync(request);
+
+        Assert.True(result.CbamRisk.IsInScope);
+        Assert.Equal(CbamRiskEvaluator.High, result.CbamRisk.RiskLevel);
+        Assert.Equal(CbamProductGroup.IronAndSteel, result.CbamRisk.ProductGroup);
+    }
+
+    [Fact]
+    public async Task CreateAsync_KapsamDisiFirma_CbamKapsamDisi()
+    {
+        using var db = TestDb.Create();
+        var company = await TestDb.AddCompanyAsync(db, "Mobilya Atölyesi", exportsToEu: true);
+        var service = new AssessmentService(db);
+
+        var result = await service.CreateAsync(TestDb.BuildRequest(db, company.Id, _ => 1));
+
+        Assert.False(result.CbamRisk.IsInScope);
+        Assert.Equal(CbamRiskEvaluator.OutOfScope, result.CbamRisk.RiskLevel);
+    }
+
+    [Fact]
     public async Task CreateAsync_YanitlariSoruSirasinaGoreDondurur()
     {
         using var db = TestDb.Create();

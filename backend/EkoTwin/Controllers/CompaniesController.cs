@@ -27,7 +27,7 @@ public class CompaniesController : ControllerBase
         var companies = await _db.Companies
             .AsNoTracking()
             .OrderByDescending(c => c.CreatedAt)
-            .Select(c => new CompanyResponse(c.Id, c.CompanyName, c.Sector, c.EmployeeCount, c.CreatedAt))
+            .Select(c => new CompanyResponse(c.Id, c.CompanyName, c.Sector, c.EmployeeCount, c.ExportsToEu, c.CbamProductGroup, c.CreatedAt))
             .ToListAsync(ct);
 
         return Ok(companies);
@@ -40,7 +40,7 @@ public class CompaniesController : ControllerBase
         var company = await _db.Companies
             .AsNoTracking()
             .Where(c => c.Id == id)
-            .Select(c => new CompanyResponse(c.Id, c.CompanyName, c.Sector, c.EmployeeCount, c.CreatedAt))
+            .Select(c => new CompanyResponse(c.Id, c.CompanyName, c.Sector, c.EmployeeCount, c.ExportsToEu, c.CbamProductGroup, c.CreatedAt))
             .FirstOrDefaultAsync(ct);
 
         return company is null ? NotFound() : Ok(company);
@@ -55,14 +55,15 @@ public class CompaniesController : ControllerBase
             CompanyName = request.CompanyName.Trim(),
             Sector = request.Sector.Trim(),
             EmployeeCount = request.EmployeeCount,
+            ExportsToEu = request.ExportsToEu,
+            CbamProductGroup = request.CbamProductGroup,
             CreatedAt = DateTime.UtcNow
         };
 
         _db.Companies.Add(company);
         await _db.SaveChangesAsync(ct);
 
-        var response = new CompanyResponse(company.Id, company.CompanyName, company.Sector, company.EmployeeCount, company.CreatedAt);
-        return CreatedAtAction(nameof(GetById), new { id = company.Id }, response);
+        return CreatedAtAction(nameof(GetById), new { id = company.Id }, CompanyResponse.From(company));
     }
 
     /// <summary>Firmanın geçmiş değerlendirmelerini listeler (gelişimi izlemek için).</summary>

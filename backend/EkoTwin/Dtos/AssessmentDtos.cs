@@ -39,6 +39,15 @@ public record AnswerResponse(
     string QuestionText,
     int Score);
 
+/// <summary>SKDM / CBAM risk değerlendirmesi.</summary>
+public record CbamRiskResponse(
+    bool IsInScope,
+    CbamProductGroup ProductGroup,
+    string ProductGroupName,
+    string RiskLevel,
+    string Summary,
+    IReadOnlyList<string> Actions);
+
 /// <summary>Değerlendirme sonucu (rapor).</summary>
 public record AssessmentResponse(
     Guid Id,
@@ -48,6 +57,7 @@ public record AssessmentResponse(
     decimal TotalScore,
     string MaturityLevel,
     IReadOnlyList<DimensionScoreResponse> DimensionScores,
+    CbamRiskResponse CbamRisk,
     IReadOnlyList<AnswerResponse> Answers);
 
 /// <summary>Firmanın geçmiş değerlendirmelerini listelemek için özet.</summary>

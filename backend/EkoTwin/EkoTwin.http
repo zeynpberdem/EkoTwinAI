@@ -13,9 +13,11 @@ POST {{host}}/api/companies
 Content-Type: application/json
 
 {
-  "companyName": "Örnek Tekstil A.Ş.",
-  "sector": "Tekstil",
-  "employeeCount": 45
+  "companyName": "Örnek Döküm Ltd. Şti.",
+  "sector": "Metal Döküm",
+  "employeeCount": 60,
+  "exportsToEu": true,
+  "cbamProductGroup": "IronAndSteel"
 }
 
 ### 3) Firmaları listele

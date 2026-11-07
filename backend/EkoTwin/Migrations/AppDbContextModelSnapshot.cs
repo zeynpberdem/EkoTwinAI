@@ -98,6 +98,11 @@ namespace EkoTwin.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("uuidv7()");
 
+                    b.Property<string>("CbamProductGroup")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -108,6 +113,9 @@ namespace EkoTwin.Migrations
 
                     b.Property<int>("EmployeeCount")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("ExportsToEu")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Sector")
                         .IsRequired()

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using EkoTwin.Models;
 
 namespace EkoTwin.Dtos;
 
@@ -15,6 +16,13 @@ public class CreateCompanyRequest
     /// <summary>KOBİ tanımı gereği 250'den az çalışan.</summary>
     [Range(1, 249, ErrorMessage = "Çalışan sayısı 1 ile 249 arasında olmalıdır (KOBİ tanımı).")]
     public int EmployeeCount { get; set; }
+
+    /// <summary>AB ülkelerine ihracat yapılıyor mu?</summary>
+    public bool ExportsToEu { get; set; }
+
+    /// <summary>AB'ye satılan ana ürünün CBAM grubu; kapsam dışıysa "None".</summary>
+    [EnumDataType(typeof(CbamProductGroup), ErrorMessage = "Geçersiz CBAM ürün grubu.")]
+    public CbamProductGroup CbamProductGroup { get; set; } = CbamProductGroup.None;
 }
 
 /// <summary>API'nin döndürdüğü firma bilgisi.</summary>
@@ -23,4 +31,10 @@ public record CompanyResponse(
     string CompanyName,
     string Sector,
     int EmployeeCount,
-    DateTime CreatedAt);
+    bool ExportsToEu,
+    CbamProductGroup CbamProductGroup,
+    DateTime CreatedAt)
+{
+    public static CompanyResponse From(Company c) =>
+        new(c.Id, c.CompanyName, c.Sector, c.EmployeeCount, c.ExportsToEu, c.CbamProductGroup, c.CreatedAt);
+}
