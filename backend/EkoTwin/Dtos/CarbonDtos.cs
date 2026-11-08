@@ -51,12 +51,29 @@ public record CarbonFootprintItemResponse(
     string SourceName,
     EmissionScope Scope,
     string ScopeName,
+    string SimpleScopeName,
     decimal Quantity,
     string Unit,
     decimal FactorKgCo2ePerUnit,
     decimal EmissionTonnes,
+    string SimpleTonnes,
     decimal SharePercent,
     string FactorReference);
+
+/// <summary>
+/// Karbon raporunun KOBİ sahibine gösterilen sade özeti: yuvarlanmış rakamlar, teknik terim yok.
+/// Kesin değerler ve teknik ifadeler raporun diğer alanlarında (danışman / PDF) durur.
+/// </summary>
+public record CarbonSimpleResponse(
+    string Headline,
+    string OwnFuels,
+    string Electricity,
+    string? PerEmployee,
+    string? LargestSource,
+    string? Guidance,
+    string? Comparison,
+    string? CbamNote,
+    string Limitation);
 
 /// <summary>Önceki yılın kaydıyla karşılaştırma.</summary>
 public record CarbonComparisonResponse(
@@ -89,6 +106,7 @@ public record CarbonFootprintResponse(
     CarbonComparisonResponse? Comparison,
     string? CbamNote,
     IReadOnlyList<string> Limitations,
+    CarbonSimpleResponse Simple,
     IReadOnlyList<CarbonFootprintItemResponse> Items);
 
 /// <summary>Firmanın yıllık karbon kayıtları listesi (gelişim grafiği için).</summary>

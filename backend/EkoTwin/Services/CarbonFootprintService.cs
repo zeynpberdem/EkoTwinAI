@@ -222,12 +222,29 @@ public class CarbonFootprintService : ICarbonFootprintService
             .ThenBy(i => i.Source)
             .Select(i => new CarbonFootprintItemResponse(
                 i.Source, Lookups.EmissionSourceName(i.Source), i.Scope, Lookups.EmissionScopeName(i.Scope),
-                i.Quantity, i.Unit, i.FactorKgCo2ePerUnit, i.EmissionTonnes,
+                PlainLanguage.ScopeName(i.Scope),
+                i.Quantity, i.Unit, i.FactorKgCo2ePerUnit, i.EmissionTonnes, PlainLanguage.Tonnes(i.EmissionTonnes),
                 CarbonCalculator.SharePercent(i.EmissionTonnes, f.TotalTonnes), i.FactorReference))
             .ToList();
 
         var largest = items.FirstOrDefault(i => i.EmissionTonnes > 0);
         var cbamInScope = f.Company.ExportsToEu && f.Company.CbamProductGroup != CbamProductGroup.None;
+
+        // KOBİ sahibine gösterilen sade özet (rakamlar yuvarlanır, teknik terim yok)
+        var simple = new CarbonSimpleResponse(
+            Headline: $"Firmanızın {f.Year} yılı karbonu: yaklaşık {PlainLanguage.Tonnes(f.TotalTonnes)}",
+            OwnFuels: $"Kendi yaktığınız yakıtlardan: {PlainLanguage.Tonnes(f.Scope1Tonnes)}",
+            Electricity: $"Kullandığınız elektrikten: {PlainLanguage.Tonnes(f.Scope2Tonnes)}",
+            PerEmployee: f.EmployeeCount > 0 ? $"Çalışan başına: {PlainLanguage.Tonnes(f.TonnesPerEmployee)}" : null,
+            LargestSource: largest is null
+                ? null
+                : $"Karbonunuz en çok {PlainLanguage.SourceAblative(largest.Source)} geliyor ({PlainLanguage.Percent(largest.SharePercent)}).",
+            Guidance: largest is null ? null : PlainLanguage.CarbonGuidance(largest.Source),
+            Comparison: comparison is null
+                ? null
+                : PlainLanguage.CarbonComparison(comparison.PreviousYear, comparison.ChangeTonnes, comparison.ChangePercent),
+            CbamNote: cbamInScope ? PlainLanguage.CarbonCbamNote : null,
+            Limitation: PlainLanguage.CarbonLimitation);
 
         return new CarbonFootprintResponse(
             f.Id, f.CompanyId, f.Company.CompanyName, f.Year, f.CreatedAt, f.UpdatedAt,
@@ -237,6 +254,7 @@ public class CarbonFootprintService : ICarbonFootprintService
             comparison,
             cbamInScope ? CbamNoteText : null,
             Limitations,
+            simple,
             items);
     }
 }

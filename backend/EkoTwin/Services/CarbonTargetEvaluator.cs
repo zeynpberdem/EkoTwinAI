@@ -13,6 +13,8 @@ namespace EkoTwin.Services;
 ///   Beklenen azalma %    = Hedef % × (geçen yıl / toplam hedef süresi)   ← doğrusal yol
 ///   Durum                = Ulaşıldı (gerçekleşen ≥ hedef) · Yolunda (gerçekleşen ≥ beklenen) · Geride
 ///   Tahmini yıl          = Bugüne kadarki yıllık ortalama hızla hedefin tamamlanacağı yıl
+///
+/// Özet iki dilde üretilir: teknik (Summary) ve sade (SimpleSummary; KOBİ sahibine gösterilir).
 /// </summary>
 public static class CarbonTargetEvaluator
 {
@@ -28,30 +30,44 @@ public static class CarbonTargetEvaluator
         _ => status.ToString()
     };
 
+    public static string SimpleStatusName(TargetStatus status) => status switch
+    {
+        TargetStatus.BaseYearMissing => "Başlangıç yılı bilgisi eksik",
+        TargetStatus.NoDataAfterBaseYear => "Henüz yeni yıl bilgisi yok",
+        TargetStatus.Achieved => "Hedefe ulaştınız",
+        TargetStatus.OnTrack => "İyi gidiyorsunuz",
+        TargetStatus.Behind => "Geride kalıyorsunuz",
+        _ => status.ToString()
+    };
+
     public static CarbonTargetResponse Evaluate(CarbonTarget target, IEnumerable<YearTotal> footprints)
     {
         var byYear = footprints.ToDictionary(f => f.Year, f => f.TotalTonnes);
         var p = target.ReductionPercent;
+        var by = target.BaseYear;
 
-        CarbonTargetResponse Build(TargetStatus status, string summary, decimal? baseT = null, decimal? targetT = null,
-            int? latestYear = null, decimal? latestT = null, decimal? achieved = null, decimal? progress = null,
-            decimal? expected = null, int? projected = null) => new(
+        CarbonTargetResponse Build(TargetStatus status, string summary, string simpleSummary, decimal? baseT = null,
+            decimal? targetT = null, int? latestYear = null, decimal? latestT = null, decimal? achieved = null,
+            decimal? progress = null, decimal? expected = null, int? projected = null) => new(
             target.Id, target.BaseYear, target.TargetYear, p, baseT, targetT, latestYear, latestT,
             achieved, progress, expected, projected, status, StatusName(status), summary,
-            target.CreatedAt, target.UpdatedAt);
+            SimpleStatusName(status), simpleSummary, target.CreatedAt, target.UpdatedAt);
 
-        if (!byYear.TryGetValue(target.BaseYear, out var baseTonnes) || baseTonnes <= 0)
+        if (!byYear.TryGetValue(by, out var baseTonnes) || baseTonnes <= 0)
             return Build(TargetStatus.BaseYearMissing,
-                $"Baz yıl ({target.BaseYear}) için karbon kaydı bulunamadı; hedef ilerlemesi hesaplanamıyor.");
+                $"Baz yıl ({by}) için karbon kaydı bulunamadı; hedef ilerlemesi hesaplanamıyor.",
+                $"Başlangıç yılı ({by}) için karbon hesabı bulunamadı. Önce o yılın karbonunu girin.");
 
         var targetTonnes = Round(baseTonnes * (1 - p / 100m), 3);
 
-        var latest = byYear.Where(kv => kv.Key > target.BaseYear).OrderByDescending(kv => kv.Key).FirstOrDefault();
+        var latest = byYear.Where(kv => kv.Key > by).OrderByDescending(kv => kv.Key).FirstOrDefault();
         if (latest.Key == 0)
             return Build(TargetStatus.NoDataAfterBaseYear,
                 $"Hedef: {target.TargetYear} yılına kadar emisyonu {Number(baseTonnes, "0.#")} t'dan " +
-                $"{Number(targetTonnes, "0.#")} t'a indirmek. İlerlemeyi görmek için {target.BaseYear + 1} ve " +
+                $"{Number(targetTonnes, "0.#")} t'a indirmek. İlerlemeyi görmek için {by + 1} ve " +
                 "sonraki yılların karbon hesabını girin.",
+                $"Hedefiniz: {target.TargetYear} yılına kadar karbonunuzu yaklaşık {Tons(baseTonnes)}dan {Tons(targetTonnes)}a " +
+                $"indirmek. İlerlemeyi görmek için {by + 1} ve sonraki yılların karbonunu girin.",
                 baseTonnes, targetTonnes);
 
         var latestYear = latest.Key;
@@ -60,8 +76,8 @@ public static class CarbonTargetEvaluator
         var achieved = Round((baseTonnes - latestTonnes) / baseTonnes * 100m, 1);
         var progress = Round(achieved / p * 100m, 1);
 
-        var elapsed = latestYear - target.BaseYear;
-        var span = target.TargetYear - target.BaseYear;
+        var elapsed = latestYear - by;
+        var span = target.TargetYear - by;
         var expected = Round(p * Math.Min(elapsed, span) / span, 1);
 
         var status = achieved >= p ? TargetStatus.Achieved
@@ -72,7 +88,7 @@ public static class CarbonTargetEvaluator
         if (status != TargetStatus.Achieved && achieved > 0)
         {
             var annualRate = achieved / elapsed;
-            projected = target.BaseYear + (int)Math.Ceiling(p / annualRate);
+            projected = by + (int)Math.Ceiling(p / annualRate);
         }
 
         var summary = status switch
@@ -93,9 +109,29 @@ public static class CarbonTargetEvaluator
                 $"Emisyonunuz baz yıla göre değişmedi; {target.TargetYear} hedefi için azaltım adımları gerekli."
         };
 
-        return Build(status, summary, baseTonnes, targetTonnes, latestYear, latestTonnes,
+        var change = PlainLanguage.Percent(achieved);
+        var simpleSummary = status switch
+        {
+            TargetStatus.Achieved =>
+                $"Tebrikler, hedefinize ulaştınız. {by} yılından bu yana karbonunuz {change} azaldı.",
+            TargetStatus.OnTrack =>
+                $"Hedefinize doğru iyi gidiyorsunuz. {by} yılından bu yana karbonunuz {change} azaldı." +
+                (projected is null ? "" : $" Bu hızla hedefe {projected} yılında ulaşırsınız."),
+            _ when achieved > 0 =>
+                $"Hedefin gerisinde kalıyorsunuz. {by} yılından bu yana karbonunuz {change} azaldı, ama daha hızlı " +
+                $"azalması gerekiyor. Bu hızla hedefe {projected} yılında ulaşırsınız; hedefiniz {target.TargetYear} yılı.",
+            _ when achieved < 0 =>
+                $"Karbonunuz {by} yılından bu yana {change} arttı. Hedefe ulaşmak için azaltma adımlarına başlamanız gerekiyor.",
+            _ =>
+                $"Karbonunuz {by} yılından bu yana değişmedi. Hedefe ulaşmak için azaltma adımlarına başlamanız gerekiyor."
+        };
+
+        return Build(status, summary, simpleSummary, baseTonnes, targetTonnes, latestYear, latestTonnes,
             achieved, progress, expected, projected);
     }
+
+    /// <summary>Yuvarlanmış ton ("740 ton"); cümlede "-dan" / "-a" eki doğrudan eklenir ("740 tondan", "592 tona").</summary>
+    private static string Tons(decimal tonnes) => PlainLanguage.Tonnes(tonnes);
 
     private static decimal Round(decimal value, int digits) => Math.Round(value, digits, MidpointRounding.AwayFromZero);
 }

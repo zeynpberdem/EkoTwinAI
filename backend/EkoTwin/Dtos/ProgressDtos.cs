@@ -21,6 +21,7 @@ public enum FollowUpStatus
 public record DimensionChangeResponse(
     Dimension Dimension,
     string DimensionName,
+    string SimpleName,
     decimal PreviousScore,
     decimal CurrentScore,
     decimal Change);
@@ -28,10 +29,13 @@ public record DimensionChangeResponse(
 public record QuestionChangeResponse(
     int QuestionNumber,
     string QuestionText,
+    string SimpleText,
     Dimension Dimension,
     int PreviousScore,
     int CurrentScore,
-    int Change);
+    int Change,
+    string? PreviousLabel,
+    string? CurrentLabel);
 
 public record FollowUpItemResponse(
     string Title,
@@ -42,7 +46,9 @@ public record FollowUpItemResponse(
     bool WasTopPriority,
     FollowUpStatus Status,
     string StatusName,
-    string Detail);
+    string Detail,
+    string SimpleTitle,
+    string SimpleDetail);
 
 public record FollowUpSummaryResponse(
     int PreviousCount,
@@ -51,7 +57,8 @@ public record FollowUpSummaryResponse(
     int NewCount,
     int TopPriorityCount,
     int TopPriorityImprovedCount,
-    string Summary);
+    string Summary,
+    string SimpleSummary);
 
 public record RecommendationFollowUpResponse(
     FollowUpSummaryResponse Summary,
@@ -65,6 +72,7 @@ public record AssessmentComparisonResponse(
     decimal TotalChange,
     bool MaturityLevelChanged,
     string? MaturityChange,
+    string? SimpleMaturityChange,
     IReadOnlyList<DimensionChangeResponse> DimensionChanges,
     Dimension? MostImproved,
     string? MostImprovedName,
@@ -122,6 +130,8 @@ public record CarbonTargetResponse(
     TargetStatus Status,
     string StatusName,
     string Summary,
+    string SimpleStatusName,
+    string SimpleSummary,
     DateTime CreatedAt,
     DateTime? UpdatedAt);
 
@@ -149,4 +159,5 @@ public record ProgressResponse(
     int? DaysSinceLastAssessment,
     bool ReassessmentDue,
     CarbonTrendResponse Carbon,
-    IReadOnlyList<string> Highlights);
+    IReadOnlyList<string> Highlights,
+    IReadOnlyList<string> SimpleHighlights);

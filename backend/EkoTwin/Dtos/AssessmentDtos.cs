@@ -52,7 +52,10 @@ public record CbamRiskResponse(
     string ProductGroupName,
     string RiskLevel,
     string Summary,
-    IReadOnlyList<string> Actions);
+    IReadOnlyList<string> Actions,
+    string SimpleRiskLevel,
+    string SimpleSummary,
+    IReadOnlyList<string> SimpleActions);
 
 /// <summary>Değerlendirme sonucu (rapor).</summary>
 public record AssessmentResponse(

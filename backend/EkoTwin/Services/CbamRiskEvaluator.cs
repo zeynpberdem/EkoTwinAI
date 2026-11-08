@@ -18,6 +18,8 @@ namespace EkoTwin.Services;
 /// Risk seviyesi eşikleri (EkoTwin tasarım kararı, mevzuattan gelmez):
 /// kapsamdaki ve AB'ye ihracat yapan firmada Karbon Yönetimi skoru
 /// &lt; 40 → Yüksek, &lt; 70 → Orta, ≥ 70 → Düşük.
+///
+/// Her sonuç iki dilde döner: teknik (Summary, Actions) ve sade (Simple*; KOBİ sahibine gösterilir).
 /// </summary>
 public static class CbamRiskEvaluator
 {
@@ -41,8 +43,17 @@ public static class CbamRiskEvaluator
                 Actions: new[]
                 {
                     "Enerji ve yakıt tüketim kayıtlarınızı düzenli tutmaya başlayın; ileride karbon hesabının temeli olacak."
+                },
+                SimpleRiskLevel: "Etkilenmiyorsunuz",
+                SimpleSummary: "Ürünleriniz şu an bu Avrupa kuralının kapsamında değil. " +
+                               "Yine de Avrupalı müşteriler ileride karbon bilgisi isteyebilir.",
+                SimpleActions: new[]
+                {
+                    "Elektrik, doğal gaz ve yakıt faturalarınızı düzenli saklayın. İleride karbon hesabı için gerekecek."
                 });
         }
+
+        var product = SimpleProductName(group);
 
         // 2) Kapsamdaki ürün ama AB'ye ihracat yok
         if (!exportsToEu)
@@ -57,6 +68,13 @@ public static class CbamRiskEvaluator
                 Actions: new[]
                 {
                     "AB'ye ihracat planınız varsa ürün başına emisyon hesaplama altyapısını önceden kurun."
+                },
+                SimpleRiskLevel: "Şimdilik etkilenmiyorsunuz",
+                SimpleSummary: $"Ürününüz ({product}) bu Avrupa kuralının kapsamında. Avrupa'ya satış yapmadığınız için " +
+                               "şimdilik etkilenmiyorsunuz. Avrupa'ya satmayı düşünüyorsanız şimdiden hazırlanın.",
+                SimpleActions: new[]
+                {
+                    "Avrupa'ya satış planınız varsa ürün başına karbon hesabını önceden öğrenin."
                 });
         }
 
@@ -79,18 +97,47 @@ public static class CbamRiskEvaluator
                  $"({carbonScore:0.##}). CBAM veri taleplerine hazırlıklı görünüyorsunuz."
         };
 
+        var simpleLevel = level switch
+        {
+            High => "Yüksek risk",
+            Medium => "Orta risk",
+            _ => "Hazırsınız"
+        };
+
+        var simpleSummary = level switch
+        {
+            High => $"Avrupa'ya sattığınız {product} ürünleri için karbon bilgisi istenecek ve şu an hazır değilsiniz. " +
+                    "Bu konu öncelikli. Bilgi veremezseniz yüksek bir değer varsayılır ve fiyatta geri kalırsınız.",
+            Medium => $"Avrupa'ya sattığınız {product} ürünleri için karbon bilgisi istenecek. " +
+                      "İlk adımları atmışsınız, ama istenen ürün başına bilgi için eksikler var.",
+            _ => $"Avrupa'ya sattığınız {product} ürünleri için karbon bilgisi istenecek. " +
+                 "Karbon takibiniz güçlü, bu taleplere hazır görünüyorsunuz."
+        };
+
         var actions = new List<string>
         {
             "AB'li müşterilerinizle CBAM için hangi emisyon verisini, hangi formatta isteyeceklerini görüşün.",
             "Ürün başına gömülü emisyonu (doğrudan + elektrik kaynaklı) hesaplayın.",
             "Enerji, yakıt ve hammadde tüketimlerini ürün/hat bazında kayıt altına alın."
         };
+        var simpleActions = new List<string>
+        {
+            "Avrupalı müşterinize hangi karbon bilgisini, nasıl istediğini sorun.",
+            "Ürün başına ne kadar karbon çıktığını hesaplayın (yakıt ve elektrik dahil).",
+            "Enerji, yakıt ve hammadde kullanımını ürün veya üretim hattı bazında kaydedin."
+        };
 
         if (level != Low)
+        {
             actions.Add("Emisyon verilerinizi bağımsız bir doğrulayıcıya doğrulatmayı planlayın.");
+            simpleActions.Add("Karbon bilginizi bağımsız bir uzmana onaylatmayı planlayın.");
+        }
 
         if (group is CbamProductGroup.Electricity or CbamProductGroup.Hydrogen)
+        {
             actions.Add("Elektrik ve hidrojende 50 tonluk muafiyet uygulanmaz; her miktar kapsamdadır.");
+            simpleActions.Add("Elektrik ve hidrojende miktar ne kadar az olursa olsun bu kural uygulanır.");
+        }
 
         return new CbamRiskResponse(
             IsInScope: true,
@@ -98,7 +145,10 @@ public static class CbamRiskEvaluator
             ProductGroupName: DisplayName(group),
             RiskLevel: level,
             Summary: summary,
-            Actions: actions);
+            Actions: actions,
+            SimpleRiskLevel: simpleLevel,
+            SimpleSummary: simpleSummary,
+            SimpleActions: simpleActions);
     }
 
     /// <summary>Ürün grubunun Türkçe adı.</summary>
@@ -113,4 +163,8 @@ public static class CbamRiskEvaluator
         CbamProductGroup.Hydrogen => "Hidrojen",
         _ => group.ToString()
     };
+
+    /// <summary>Cümle içinde kullanılan küçük harfli ad ("demir-çelik ürünleri").</summary>
+    private static string SimpleProductName(CbamProductGroup group) =>
+        DisplayName(group).ToLower(TurkishFormat.Culture);
 }

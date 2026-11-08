@@ -369,12 +369,26 @@ Skor hesabı değişmez. Raporda her yanıtın seçilen cevap metni (`answerLabe
 | `simpleTitle` | "Firmanızın yıllık karbonunu hesaplayın" |
 | `simpleBenefit` | "Müşteri veya banka sorduğunda cevabınız hazır olur." |
 | `simpleCbamNote` | Avrupa notu; yalnızca CBAM kapsamındaki ihracatçılara |
-| `simpleReasons` | "Cevabınız: \"Hayır, hiç hesaplamadık\"", "En çok zorlandığınız konu: Karbon takibi", "Az masraflı" |
+| `simpleReasons` | "Cevabınız: 'Hayır, hiç hesaplamadık'", "En çok zorlandığınız konu: Karbon takibi", "Az masraflı" |
 | `simpleCostText` | Az masraflı / Orta masraflı / Yüksek masraflı |
 | `answerLabel` | Öneriyi tetikleyen seçilen cevap |
 
 Sade alanlar da rapor anındaki hâliyle saklanır (snapshot). Bu özellikten önce üretilmiş raporlara
 migration sırasında şablondan sade başlık ve kazanım kopyalanır.
+
+**Raporlar** (karbon, Avrupa/CBAM, gelişim): sade cümle kalıpları tek dosyada,
+[`PlainLanguage.cs`](EkoTwin/Services/PlainLanguage.cs). Teknik alanlar ve kesin rakamlar korunur.
+
+| Rapor | Sade alanlar | Örnek |
+|---|---|---|
+| Karbon | `simple` (başlık, yakıt, elektrik, çalışan başına, en büyük kaynak, öneri, karşılaştırma, Avrupa notu, sınır), kalemlerde `simpleScopeName`, `simpleTonnes` | "Kendi yaktığınız yakıtlardan: 559 ton" |
+| Avrupa (CBAM) | `simpleRiskLevel`, `simpleSummary`, `simpleActions` | "Yüksek risk", "Avrupa'ya sattığınız demir-çelik ürünleri için karbon bilgisi istenecek…" |
+| Hedef | `simpleStatusName`, `simpleSummary` | "Hedefinize doğru iyi gidiyorsunuz… Bu hızla hedefe 2027 yılında ulaşırsınız." |
+| Gelişim | `simpleHighlights`, öneri takibinde `simpleTitle`/`simpleDetail`, soru değişiminde seçilen cevaplar | "Önce: “Hayır, hiç hesaplamadık” → Şimdi: “Her yıl hesaplıyoruz”" |
+
+Yazım kuralları: tonlar yuvarlanır (10 tonun üstü tam sayı), yüzdeler "yüzde 11" biçiminde yazılır,
+yıllardan sonra ek yerine "2027 yılında" denir. Öneri takibinde "yaptınız" değil "ilerleme var" denir;
+durum firmanın yeni cevaplarından çıkarılır, işin yapıldığı ayrıca doğrulanmaz.
 
 **Ölçüm ve koruma** ([`QuestionSeedTests`](EkoTwin.Tests/QuestionSeedTests.cs))
 - Jargon testi: sade soru ve seçeneklerde ERP, CBAM, emisyon, entegre vb. geçemez.
@@ -390,6 +404,9 @@ migration sırasında şablondan sade başlık ve kazanım kopyalanır.
 | "Bu ne demek?" açıklamaları | 63,9 | Orta güçlükte (test eşiği ≥ 50) |
 | Öneri açıklamaları (teknik `rationale`) | 37,1 | Zor |
 | Öneri kazanımları (sade `simpleBenefit`) | 64,0 | Orta güçlükte (test eşiği ≥ 50) |
+| Avrupa ve karbon metinleri (teknik) | 50,7 | Orta güçlükte |
+| Avrupa ve karbon metinleri (sade) | 65,2 | Orta güçlükte |
+| Gelişim maddeleri (teknik → sade) | 77,5 → 78,9 | Kolay (sade, teknikten kolay olmalı; eşik ≥ 50) |
 
 Not: Ateşman yalnızca kelime/cümle uzunluğuna bakar. "ERP", "LCA" gibi kısaltmaları kısa (kolay) sayar,
 uzun Türkçe kelimeleri cezalandırır. Bu yüzden resmi ve sade sorular arasındaki fark küçük çıkar; asıl
@@ -419,6 +436,7 @@ dotnet test
 - `ProgressApiTests` – gelişim, karşılaştırma ve hedef uç noktaları uçtan uca
 - `QuestionSeedTests` – soru/seçenek yapısı, jargon yasağı, uzunluk sınırları, okunabilirlik
 - `ReadabilityTests` – Ateşman formülünün elle hesapla doğrulanması
+- `ReportSimpleLanguageTests` – karbon, Avrupa, hedef ve gelişim raporlarının sade cümleleri; jargon taraması
 - `RecommendationSimpleLanguageTests` – öneri sade metinleri (jargon, uzunluk, okunabilirlik) ve sade gerekçeler
 - `SimpleLanguageApiTests` – sade metin, açıklama, seçenekler ve rapordaki cevap metni uçtan uca
 - `ApiIntegrationTests` – uygulamayı HTTP üzerinden uçtan uca çalıştırır: sağlık kontrolü, CORS,

@@ -51,7 +51,8 @@ public class ProgressService : IProgressService
             daysSince,
             daysSince is >= ProgressAnalyzer.ReassessmentIntervalDays,
             carbon,
-            ProgressAnalyzer.Highlights(assessments.Count, comparison, daysSince, carbon));
+            ProgressAnalyzer.Highlights(assessments.Count, comparison, daysSince, carbon),
+            ProgressAnalyzer.SimpleHighlights(assessments.Count, comparison, daysSince, carbon));
     }
 
     public async Task<AssessmentComparisonResponse?> CompareAsync(Guid assessmentId, Guid otherAssessmentId, CancellationToken ct = default)
@@ -128,7 +129,7 @@ public class ProgressService : IProgressService
     private async Task<List<Assessment>> LoadFullAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct) =>
         await _db.Assessments.AsNoTracking()
             .AsSplitQuery()
-            .Include(a => a.AssessmentDetails).ThenInclude(d => d.Question)
+            .Include(a => a.AssessmentDetails).ThenInclude(d => d.Question).ThenInclude(q => q.Options)
             .Include(a => a.Recommendations)
             .Where(a => ids.Contains(a.Id))
             .OrderBy(a => a.CreatedAt)

@@ -45,7 +45,7 @@ public static class ProgressAnalyzer
 
         // ---- Boyutlar ----
         var dimensionChanges = Enum.GetValues<Dimension>()
-            .Select(d => new DimensionChangeResponse(d, ScoreCalculator.DisplayName(d),
+            .Select(d => new DimensionChangeResponse(d, ScoreCalculator.DisplayName(d), ScoreCalculator.SimpleName(d),
                 prevScores[d], currScores[d], currScores[d] - prevScores[d]))
             .ToList();
 
@@ -64,8 +64,8 @@ public static class ProgressAnalyzer
             .Select(c =>
             {
                 var p = prevAnswers[c.Question.DisplayOrder];
-                return new QuestionChangeResponse(c.Question.DisplayOrder, c.Question.Text, c.Question.Dimension,
-                    p.Score, c.Score, c.Score - p.Score);
+                return new QuestionChangeResponse(c.Question.DisplayOrder, c.Question.Text, c.Question.SimpleText,
+                    c.Question.Dimension, p.Score, c.Score, c.Score - p.Score, Label(p), Label(c));
             })
             .ToList();
 
@@ -73,6 +73,9 @@ public static class ProgressAnalyzer
         var prevLevel = ScoreCalculator.MaturityLevel(previous.TotalScore);
         var currLevel = ScoreCalculator.MaturityLevel(current.TotalScore);
         var levelChanged = prevLevel != currLevel;
+        var simpleChange = levelChanged
+            ? $"{ScoreCalculator.SimpleMaturityLevel(previous.TotalScore)} → {ScoreCalculator.SimpleMaturityLevel(current.TotalScore)}"
+            : null;
 
         return new AssessmentComparisonResponse(
             AssessmentSummaryResponse.From(previous),
@@ -81,6 +84,7 @@ public static class ProgressAnalyzer
             current.TotalScore - previous.TotalScore,
             levelChanged,
             levelChanged ? $"{prevLevel} → {currLevel}" : null,
+            simpleChange,
             dimensionChanges,
             mostImproved?.Dimension, mostImproved?.DimensionName,
             mostDeclined?.Dimension, mostDeclined?.DimensionName,
@@ -171,6 +175,7 @@ public static class ProgressAnalyzer
         {
             bool improved;
             string detail;
+            string simpleDetail;
 
             if (r.TriggerType == RecommendationTrigger.Question && r.QuestionNumber is { } n)
             {
@@ -179,11 +184,13 @@ public static class ProgressAnalyzer
                 {
                     improved = now.Score > RecommendationEngine.QuestionTriggerMaxScore;
                     detail = $"Soru {n}: {before}/5 → {now.Score}/5";
+                    simpleDetail = AnswerChange(n, r.AnswerLabel ?? Label(prevAnswers.GetValueOrDefault(n)), Label(now), before, now.Score);
                 }
                 else
                 {
                     improved = false;
                     detail = $"Soru {n} yeni değerlendirmede yer almıyor";
+                    simpleDetail = "Bu soru artık sorulmuyor.";
                 }
             }
             else
@@ -191,10 +198,11 @@ public static class ProgressAnalyzer
                 improved = currScores[r.Dimension] >= RecommendationEngine.DimensionTriggerThreshold;
                 detail = $"{ScoreCalculator.DisplayName(r.Dimension)} skoru: " +
                          $"{Number(prevScores[r.Dimension])} → {Number(currScores[r.Dimension])}";
+                simpleDetail = DimensionChange(r.Dimension, prevScores, currScores);
             }
 
             var status = improved ? FollowUpStatus.Improved : FollowUpStatus.StillOpen;
-            items.Add(Item(r, status, detail));
+            items.Add(Item(r, status, detail, simpleDetail));
         }
 
         // Yeni çıkan öneriler
@@ -204,12 +212,18 @@ public static class ProgressAnalyzer
             if (previousKeys.Contains(Key(r)))
                 continue;
 
-            var detail = r.TriggerType == RecommendationTrigger.Question && r.QuestionNumber is { } n
+            var isQuestion = r.TriggerType == RecommendationTrigger.Question && r.QuestionNumber is not null;
+            var n = r.QuestionNumber ?? 0;
+            var detail = isQuestion
                 ? $"Soru {n}: {prevAnswers.GetValueOrDefault(n)?.Score.ToString() ?? "-"}/5 → {r.AnswerScore}/5"
                 : $"{ScoreCalculator.DisplayName(r.Dimension)} skoru: " +
                   $"{Number(prevScores[r.Dimension])} → {Number(currScores[r.Dimension])}";
+            var simpleDetail = isQuestion
+                ? AnswerChange(n, Label(prevAnswers.GetValueOrDefault(n)), r.AnswerLabel ?? Label(currAnswers.GetValueOrDefault(n)),
+                    prevAnswers.GetValueOrDefault(n)?.Score, r.AnswerScore)
+                : DimensionChange(r.Dimension, prevScores, currScores);
 
-            items.Add(Item(r, FollowUpStatus.New, detail) with { WasTopPriority = false });
+            items.Add(Item(r, FollowUpStatus.New, detail, simpleDetail) with { WasTopPriority = false });
         }
 
         var previousItems = items.Where(i => i.Status != FollowUpStatus.New).ToList();
@@ -225,14 +239,30 @@ public static class ProgressAnalyzer
             newCount,
             top.Count,
             topImproved,
-            SummaryText(previousItems.Count, improvedCount, top.Count, topImproved, newCount));
+            SummaryText(previousItems.Count, improvedCount, top.Count, topImproved, newCount),
+            SimpleSummaryText(previousItems.Count, improvedCount, top.Count, topImproved, newCount));
 
         return new RecommendationFollowUpResponse(summary, items);
     }
 
-    private static FollowUpItemResponse Item(AssessmentRecommendation r, FollowUpStatus status, string detail) => new(
+    private static FollowUpItemResponse Item(AssessmentRecommendation r, FollowUpStatus status, string detail, string simpleDetail) => new(
         r.Title, r.TriggerType, r.Dimension, ScoreCalculator.DisplayName(r.Dimension), r.QuestionNumber,
-        r.IsTopPriority, status, StatusName(status), detail);
+        r.IsTopPriority, status, StatusName(status), detail,
+        string.IsNullOrEmpty(r.SimpleTitle) ? r.Title : r.SimpleTitle,
+        simpleDetail);
+
+    /// <summary>Seçilen cevabın metni (soru seçenekleri yüklüyse).</summary>
+    private static string? Label(AssessmentDetail? d) =>
+        d?.Question.Options.FirstOrDefault(o => o.Score == d.Score)?.Label;
+
+    /// <summary>Sade cevap değişimi: Önce: "Hayır, hiç hesaplamadık" → Şimdi: "Her yıl hesaplıyoruz".</summary>
+    private static string AnswerChange(int number, string? before, string? now, int? beforeScore, int? nowScore) =>
+        before is not null && now is not null
+            ? $"Önce: “{before}” → Şimdi: “{now}”"
+            : $"Soru {number}: önce {beforeScore?.ToString() ?? "-"}, şimdi {nowScore?.ToString() ?? "-"} (5 üzerinden)";
+
+    private static string DimensionChange(Dimension d, IReadOnlyDictionary<Dimension, decimal> prev, IReadOnlyDictionary<Dimension, decimal> curr) =>
+        $"{ScoreCalculator.SimpleName(d)} puanı: {PlainLanguage.Points(prev[d])} → {PlainLanguage.Points(curr[d])} (100 üzerinden)";
 
     /// <summary>Öneriyi iki rapor arasında eşleştirme anahtarı: şablon Id'si (şablon silinmişse başlık).</summary>
     private static string Key(AssessmentRecommendation r) => r.RecommendationId?.ToString() ?? r.Title;
@@ -250,5 +280,83 @@ public static class ProgressAnalyzer
         if (newCount > 0)
             text += $"; {newCount} yeni öneri çıktı";
         return text + ".";
+    }
+
+    /// <summary>
+    /// Öneri takibinin sade özeti. "Yaptınız" demek yerine "ilerleme var" denir: durum firmanın
+    /// yeni cevaplarından çıkarılır, işin gerçekten yapıldığı ayrıca doğrulanmaz.
+    /// </summary>
+    private static string SimpleSummaryText(int previousCount, int improved, int topCount, int topImproved, int newCount)
+    {
+        if (previousCount == 0)
+            return newCount > 0 ? $"Bu sefer {newCount} yeni konu çıktı." : "Şu an önerilecek yeni bir iş yok.";
+
+        var text = improved > 0
+            ? $"Geçen sefer önerilen {previousCount} işten {improved} tanesinde ilerleme var."
+            : $"Geçen sefer önerilen {previousCount} işte henüz ilerleme görünmüyor.";
+
+        if (topCount > 0)
+            text += topImproved == topCount ? $" En acil {topCount} işin hepsinde ilerleme var."
+                  : topImproved == 0 ? $" En acil {topCount} iş hâlâ bekliyor."
+                  : $" En acil {topCount} işten {topImproved} tanesinde ilerleme var.";
+
+        if (newCount > 0)
+            text += $" {newCount} yeni konu çıktı.";
+
+        return text;
+    }
+
+    /// <summary>Gelişim sayfasında KOBİ sahibine gösterilen sade özet maddeleri.</summary>
+    public static IReadOnlyList<string> SimpleHighlights(
+        int assessmentCount,
+        AssessmentComparisonResponse? comparison,
+        int? daysSinceLastAssessment,
+        CarbonTrendResponse carbon)
+    {
+        var list = new List<string>();
+
+        if (assessmentCount == 0)
+            list.Add("Henüz test doldurmadınız. İlk testle başlayın.");
+        else if (assessmentCount == 1)
+            list.Add("Gelişiminizi görmek için testi yaklaşık 6 ay sonra yeniden doldurun.");
+
+        if (comparison is not null)
+        {
+            var before = PlainLanguage.Points(comparison.Previous.TotalScore);
+            var now = PlainLanguage.Points(comparison.Current.TotalScore);
+            list.Add(comparison.TotalChange > 0 ? $"Genel puanınız yükseldi: {before} → {now} (100 üzerinden)."
+                   : comparison.TotalChange < 0 ? $"Genel puanınız düştü: {before} → {now} (100 üzerinden)."
+                   : $"Genel puanınız değişmedi: {now} (100 üzerinden).");
+
+            if (comparison.SimpleMaturityChange is { } level)
+                list.Add(comparison.TotalChange > 0 ? $"Seviyeniz yükseldi: {level}." : $"Seviyeniz düştü: {level}.");
+
+            if (comparison.MostImproved is { } up)
+                list.Add($"En çok ilerlediğiniz konu: {ScoreCalculator.SimpleName(up)}.");
+
+            if (comparison.MostDeclined is { } down)
+                list.Add($"Dikkat: {ScoreCalculator.SimpleName(down)} konusunda geriye gittiniz.");
+
+            if (comparison.RecommendationFollowUp.Summary.PreviousCount > 0)
+                list.Add(comparison.RecommendationFollowUp.Summary.SimpleSummary);
+        }
+
+        if (daysSinceLastAssessment is >= ReassessmentIntervalDays)
+            list.Add($"Son testinizin üzerinden yaklaşık {daysSinceLastAssessment / 30} ay geçti. Testi yeniden doldurmanızı öneririz.");
+
+        if (carbon.Series.Count == 0)
+        {
+            list.Add("Karbonunuzu hesaplayarak takibe başlayın.");
+        }
+        else
+        {
+            if (carbon.ChangeSinceBasePercent is { } change && change != 0)
+                list.Add($"Karbonunuz {carbon.BaseYear} yılından bu yana {PlainLanguage.Percent(change)} {(change < 0 ? "azaldı" : "arttı")}.");
+
+            list.Add(carbon.Target?.SimpleSummary
+                     ?? "Karbonu azaltmak için bir hedef koyarsanız ilerlemenizi burada görürsünüz.");
+        }
+
+        return list;
     }
 }
