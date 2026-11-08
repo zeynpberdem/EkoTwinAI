@@ -798,6 +798,120 @@ namespace EkoTwin.Migrations
                     b.ToTable("AssessmentRecommendations");
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.BenchmarkReference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<string>("Indicator")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("MinAnswerScore")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Percent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<int?>("QuestionNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SimpleIndicator")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SizeClass")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BenchmarkReferences", t =>
+                        {
+                            t.HasCheckConstraint("CK_BenchmarkReferences_Answer", "(\"QuestionNumber\" IS NULL AND \"MinAnswerScore\" IS NULL) OR (\"QuestionNumber\" IS NOT NULL AND \"MinAnswerScore\" BETWEEN 1 AND 5)");
+
+                            t.HasCheckConstraint("CK_BenchmarkReferences_Percent", "\"Percent\" BETWEEN 0 AND 100");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8004-000000000001"),
+                            Indicator = "ERP yazılımı kullanan girişim oranı",
+                            IsVerified = false,
+                            MinAnswerScore = 4,
+                            Percent = 23.6m,
+                            QuestionNumber = 1,
+                            SimpleIndicator = "işlerini birbirine bağlı tek bir programda yürütüyor",
+                            SizeClass = "Small",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2025",
+                            Year = 2025
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8004-000000000002"),
+                            Indicator = "ERP yazılımı kullanan girişim oranı",
+                            IsVerified = false,
+                            MinAnswerScore = 4,
+                            Percent = 46.0m,
+                            QuestionNumber = 1,
+                            SimpleIndicator = "işlerini birbirine bağlı tek bir programda yürütüyor",
+                            SizeClass = "Medium",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2025",
+                            Year = 2025
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8004-000000000003"),
+                            Indicator = "Ücretli bulut bilişim hizmeti kullanan girişim oranı",
+                            IsVerified = false,
+                            Percent = 16.7m,
+                            SimpleIndicator = "programlarını internet üzerinden ücretli olarak kullanıyor",
+                            SizeClass = "Small",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026",
+                            Year = 2026
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8004-000000000004"),
+                            Indicator = "Ücretli bulut bilişim hizmeti kullanan girişim oranı",
+                            IsVerified = false,
+                            Percent = 33.3m,
+                            SimpleIndicator = "programlarını internet üzerinden ücretli olarak kullanıyor",
+                            SizeClass = "Medium",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026",
+                            Year = 2026
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8004-000000000005"),
+                            Indicator = "Bilgi ve iletişim teknolojileri güvenlik önlemi alan girişim oranı",
+                            IsVerified = false,
+                            MinAnswerScore = 2,
+                            Percent = 83.0m,
+                            QuestionNumber = 3,
+                            SimpleIndicator = "bilgisayarları için en az bir güvenlik önlemi alıyor",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026",
+                            Year = 2026
+                        });
+                });
+
             modelBuilder.Entity("EkoTwin.Models.CarbonFootprint", b =>
                 {
                     b.Property<Guid>("Id")

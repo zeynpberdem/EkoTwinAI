@@ -17,6 +17,7 @@ builder.Services.AddScoped<IAssessmentService, AssessmentService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICarbonFootprintService, CarbonFootprintService>();
 builder.Services.AddScoped<IProgressService, ProgressService>();
+builder.Services.AddScoped<IBenchmarkService, BenchmarkService>();
 
 // Saat: testlerde sabit tarih verilebilsin diye doğrudan DateTime.UtcNow yerine TimeProvider kullanılır.
 builder.Services.AddSingleton(TimeProvider.System);

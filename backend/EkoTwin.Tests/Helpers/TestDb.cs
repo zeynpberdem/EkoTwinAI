@@ -30,13 +30,15 @@ public static class TestDb
         AppDbContext db,
         string name = "Test Tekstil A.Ş.",
         bool exportsToEu = false,
-        CbamProductGroup cbamProductGroup = CbamProductGroup.None)
+        CbamProductGroup cbamProductGroup = CbamProductGroup.None,
+        SectorType sector = SectorType.TextileAndApparel,
+        int employeeCount = 45)
     {
         var company = new Company
         {
             CompanyName = name,
-            Sector = SectorType.TextileAndApparel,
-            EmployeeCount = 45,
+            Sector = sector,
+            EmployeeCount = employeeCount,
             ExportsToEu = exportsToEu,
             CbamProductGroup = cbamProductGroup
         };

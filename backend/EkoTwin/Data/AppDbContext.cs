@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<CarbonFootprint> CarbonFootprints => Set<CarbonFootprint>();
     public DbSet<CarbonFootprintItem> CarbonFootprintItems => Set<CarbonFootprintItem>();
     public DbSet<CarbonTarget> CarbonTargets => Set<CarbonTarget>();
+    public DbSet<BenchmarkReference> BenchmarkReferences => Set<BenchmarkReference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -241,6 +242,24 @@ public class AppDbContext : DbContext
             entity.HasIndex(i => new { i.CarbonFootprintId, i.Source }).IsUnique();
 
             entity.ToTable(t => t.HasCheckConstraint("CK_CarbonFootprintItems_Quantity", "\"Quantity\" >= 0"));
+        });
+
+        // ---------- BenchmarkReference (Türkiye geneli resmi referanslar) ----------
+        modelBuilder.Entity<BenchmarkReference>(entity =>
+        {
+            entity.Property(r => r.Id).HasDefaultValueSql("uuidv7()");
+            entity.Property(r => r.SizeClass).HasConversion<string>().HasMaxLength(10);
+            entity.Property(r => r.Percent).HasPrecision(5, 2);
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_BenchmarkReferences_Percent", "\"Percent\" BETWEEN 0 AND 100");
+                t.HasCheckConstraint("CK_BenchmarkReferences_Answer",
+                    "(\"QuestionNumber\" IS NULL AND \"MinAnswerScore\" IS NULL) OR " +
+                    "(\"QuestionNumber\" IS NOT NULL AND \"MinAnswerScore\" BETWEEN 1 AND 5)");
+            });
+
+            entity.HasData(BenchmarkReferenceSeed.References);
         });
 
         // ---------- CarbonTarget (karbon azaltım hedefi) ----------

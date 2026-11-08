@@ -102,6 +102,7 @@ dotnet run --launch-profile http
 | PUT | `/api/carbon-footprints/{id}` | Hesabı yeni değerlerle yeniden yapar |
 | DELETE | `/api/carbon-footprints/{id}` | Karbon kaydını siler |
 | GET | `/api/companies/{id}/progress` | Gelişim özeti: geçmiş, son karşılaştırma, öneri takibi, karbon trendi, hedef |
+| GET | `/api/companies/{id}/benchmark` | Sektör karşılaştırması: benzer firmalara göre konum + Türkiye geneli referanslar |
 | GET | `/api/assessments/{id}/compare/{otherId}` | Aynı firmanın iki değerlendirmesini karşılaştırır |
 | GET | `/api/companies/{id}/carbon-target` | Karbon azaltım hedefi ve ilerlemesi |
 | PUT | `/api/companies/{id}/carbon-target` | Hedefi oluşturur / günceller (firma başına tek hedef) |
@@ -344,6 +345,40 @@ Eşikler öneri motorunun tetikleme eşikleriyle aynıdır. A3'teki öneri snaps
 
 Kurallar: [`ProgressAnalyzer.cs`](EkoTwin/Services/ProgressAnalyzer.cs), [`CarbonTargetEvaluator.cs`](EkoTwin/Services/CarbonTargetEvaluator.cs)
 
+## Sektör karşılaştırması
+
+"Benzer firmalara göre neredeyim?" sorusuna cevap verir. İki kaynak birlikte kullanılır (karışık yaklaşım):
+
+**1) Sistem içi karşılaştırma (asıl)**: aynı sorular ve aynı puanlama olduğu için adil karşılaştırma.
+
+| Kural | Açıklama |
+|---|---|
+| En az 5 firma | Firmanın kendisi hariç en az 5 firma yoksa karşılaştırma gösterilmez (yanıltıcı ortalama ve gizlilik riski) |
+| Kademeli grup | Aynı sektör + büyüklük → aynı sektör → aynı büyüklük → tüm firmalar; hangi grupla karşılaştırıldığı yazılır |
+| Büyüklük | Mikro (1-9), Küçük (10-49), Orta (50-249) çalışan |
+| Veri | Her firmanın yalnızca en son testi / en son karbon kaydı |
+| Gizlilik | Firma adı veya tek tek puan dönmez, yalnızca ortalama ve sıralama |
+| Konum | Ortalamadan ≥ 5 puan fark → üstünde/altında (karbonda ≥ %10); EkoTwin tasarım kararı |
+
+Genel puan, 4 boyut ve çalışan başına karbon (düşük olan iyi) karşılaştırılır. Sade çıktı:
+"10 firmadan 7'sinden daha iyisiniz." (Türkçe ekler sayıya göre elle seçilir.)
+
+**2) Türkiye geneli resmi referanslar (ek bilgi, ayrı kutuda)**: TÜİK, Girişimlerde Bilişim Teknolojileri
+Kullanım Araştırması (yalnızca 10+ çalışanlı firmaları kapsar; mikro firmalara gösterilmez).
+
+| Gösterge | Eşleşen cevap | 10-49 | 50-249 | Yıl |
+|---|---|---|---|---|
+| ERP kullanan girişim | Soru 1'de 4-5 | %23,6 | %46,0 | 2025 |
+| Ücretli bulut kullanan girişim | (yalnızca bilgi) | %16,7 | %33,3 | 2026 |
+| BİT güvenlik önlemi alan girişim | Soru 3'te 2+ | %83 (10+ geneli) | | 2026 |
+
+Enerji, karbon ve tedarik soruları için güvenilir resmi veri bulunamadı; bu sorularda yalnızca sistem içi
+karşılaştırma yapılır. **Doğrulama durumu:** değerler TÜİK bülten metnini aktaran kaynaklardan alınmıştır;
+resmi tablo teyit edilene kadar `IsVerified = false` ve kullanıcıya gösterilmez
+([`BenchmarkReferenceSeed.cs`](EkoTwin/Data/BenchmarkReferenceSeed.cs)).
+
+Kurallar: [`BenchmarkCalculator.cs`](EkoTwin/Services/BenchmarkCalculator.cs)
+
 ## Sade dil (her yaştan KOBİ sahibi için)
 
 Kullanıcıya gösterilen metinler teknik değil, günlük dille yazılır. Teknik terimler kaybolmaz,
@@ -436,6 +471,8 @@ dotnet test
 - `ProgressApiTests` – gelişim, karşılaştırma ve hedef uç noktaları uçtan uca
 - `QuestionSeedTests` – soru/seçenek yapısı, jargon yasağı, uzunluk sınırları, okunabilirlik
 - `ReadabilityTests` – Ateşman formülünün elle hesapla doğrulanması
+- `BenchmarkCalculatorTests` – grup seçimi, ortalama ve sıralama, konum eşikleri, Türkçe ekler, resmi referans kuralları
+- `BenchmarkServiceTests` – karşılaştırma servisi (en son test, en az 5 firma, karbon, doğrulama bayrağı) ve uç nokta
 - `ReportSimpleLanguageTests` – karbon, Avrupa, hedef ve gelişim raporlarının sade cümleleri; jargon taraması
 - `RecommendationSimpleLanguageTests` – öneri sade metinleri (jargon, uzunluk, okunabilirlik) ve sade gerekçeler
 - `SimpleLanguageApiTests` – sade metin, açıklama, seçenekler ve rapordaki cevap metni uçtan uca
