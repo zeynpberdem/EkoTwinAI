@@ -115,21 +115,53 @@ public class BenchmarkServiceTests
     }
 
     [Fact]
-    public async Task TuikReferanslari_DogrulanmadikcaGosterilmez_DogrulanincaCevabaGoreGosterilir()
+    public async Task TuikReferanslari_KucukFirmayaKendiBuyuklugununDegerleri_EslesenlerCevabaGore()
     {
         await using var db = TestDb.Create();
-        var me = await AddFirmAsync(db, 4); // Soru 1 = 4 → ERP'ye "dahil"
+        var me = await AddFirmAsync(db, 4); // 25 çalışan; Soru 1 = 4 → ERP'ye "dahil", Soru 3 = 4 → güvenliğe "dahil"
 
-        var before = (await new BenchmarkService(db).GetAsync(me.Id))!;
-        Assert.Empty(before.NationalReferences); // seed'de hepsi doğrulanmamış
+        var r = (await new BenchmarkService(db).GetAsync(me.Id))!;
 
-        foreach (var reference in db.BenchmarkReferences) reference.IsVerified = true;
+        // Küçük firma: ERP + güvenlik (eşleşmeli) + bulut + enerji (yalnızca bilgi)
+        Assert.Equal(4, r.NationalReferences.Count);
+        var erp = r.NationalReferences.Single(n => n.Indicator.StartsWith("ERP"));
+        Assert.Equal(23.6m, erp.Percent);
+        Assert.True(erp.YouAreIncluded);
+        Assert.Equal(81.2m, r.NationalReferences.Single(n => n.Indicator.Contains("güvenlik")).Percent);
+
+        var energy = r.NationalReferences.Single(n => n.Indicator.StartsWith("Enerji"));
+        Assert.Null(energy.YouAreIncluded); // kullanıcı kararı: şimdilik yalnızca bilgi
+        Assert.Equal("Türkiye'de sizin büyüklüğünüzdeki (10-49 çalışan) firmaların yüzde 15'i enerjiyi azaltmak için yazılım veya akıllı sistem kullanıyor.",
+            energy.SimpleText);
+    }
+
+    [Fact]
+    public async Task DogrulanmamisReferans_Gosterilmez()
+    {
+        await using var db = TestDb.Create();
+        var me = await AddFirmAsync(db, 4);
+        foreach (var reference in db.BenchmarkReferences) reference.IsVerified = false;
         await db.SaveChangesAsync();
 
-        var after = (await new BenchmarkService(db).GetAsync(me.Id))!;
-        var erp = after.NationalReferences.Single(n => n.Indicator.StartsWith("ERP"));
-        Assert.True(erp.YouAreIncluded);
-        Assert.Equal(3, after.NationalReferences.Count); // küçük firma: ERP + bulut + güvenlik (10+ geneli)
+        var r = (await new BenchmarkService(db).GetAsync(me.Id))!;
+
+        Assert.Empty(r.NationalReferences);
+    }
+
+    [Fact]
+    public async Task OrtaBuyuklukFirmaya_OrtaBuyuklugunDegerleri_MikroFirmayaHicbiri()
+    {
+        await using var db = TestDb.Create();
+        var medium = await AddFirmAsync(db, 3, employees: 120);
+        var micro = await AddFirmAsync(db, 3, employees: 6);
+        var service = new BenchmarkService(db);
+
+        var m = (await service.GetAsync(medium.Id))!;
+        var mi = (await service.GetAsync(micro.Id))!;
+
+        Assert.Equal(46.0m, m.NationalReferences.Single(n => n.Indicator.StartsWith("ERP")).Percent);
+        Assert.Equal(90.5m, m.NationalReferences.Single(n => n.Indicator.Contains("güvenlik")).Percent);
+        Assert.Empty(mi.NationalReferences); // TÜİK araştırması 10+ çalışanı kapsar
     }
 
     [Fact]

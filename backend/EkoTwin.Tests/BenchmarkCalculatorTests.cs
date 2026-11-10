@@ -228,6 +228,8 @@ public class BenchmarkCalculatorTests
             Assert.InRange(r.Percent, 0m, 100m);
             Assert.Equal(r.QuestionNumber is null, r.MinAnswerScore is null);
             Assert.NotEqual(SizeClass.Micro, r.SizeClass);
+            Assert.Contains("veriportali.tuik.gov.tr/tr/press/", r.Source); // resmi bülten bağlantısı
+            Assert.True(r.IsVerified, $"{r.Indicator} ({r.SizeClass}) doğrulanmamış");
             Assert.DoesNotContain(QuestionSeedTests.Jargon, term => tr.CompareInfo.IndexOf(r.SimpleIndicator, term, CompareOptions.IgnoreCase) >= 0);
         }
     }

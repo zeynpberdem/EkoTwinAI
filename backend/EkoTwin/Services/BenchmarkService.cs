@@ -149,6 +149,8 @@ public class BenchmarkService : IBenchmarkService
 
         return await _db.AssessmentDetails.AsNoTracking()
             .Where(d => d.AssessmentId == latestId)
-            .ToDictionaryAsync(d => d.Question.DisplayOrder, d => d.Score, ct);
+            // Soru numarası sorguda seçilir (Question yüklenmeden d.Question okunursa null hatası verir).
+            .Select(d => new { d.Question.DisplayOrder, d.Score })
+            .ToDictionaryAsync(x => x.DisplayOrder, x => x.Score, ct);
     }
 }
