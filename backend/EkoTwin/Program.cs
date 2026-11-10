@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using EkoTwin.Data;
 using EkoTwin.Infrastructure;
 using EkoTwin.Services;
+using EkoTwin.Services.Narrative;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,13 @@ builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ICarbonFootprintService, CarbonFootprintService>();
 builder.Services.AddScoped<IProgressService, ProgressService>();
 builder.Services.AddScoped<IBenchmarkService, BenchmarkService>();
+
+// ---------- Yapay zekâ rapor mektubu (A7) ----------
+// Anahtar ve model user-secrets'tan okunur (Gemini:ApiKey, Gemini:Model). Tanımlı değilse
+// sistem kural tabanlı metinle çalışmaya devam eder.
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+builder.Services.AddHttpClient<INarrativeWriter, GeminiNarrativeWriter>();
+builder.Services.AddScoped<INarrativeService, NarrativeService>();
 
 // Saat: testlerde sabit tarih verilebilsin diye doğrudan DateTime.UtcNow yerine TimeProvider kullanılır.
 builder.Services.AddSingleton(TimeProvider.System);

@@ -682,6 +682,54 @@ namespace EkoTwin.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EkoTwin.Models.AssessmentNarrative", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<Guid>("AssessmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FallbackReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PromptVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(6000)
+                        .HasColumnType("character varying(6000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssessmentId", "CreatedAt");
+
+                    b.ToTable("AssessmentNarratives");
+                });
+
             modelBuilder.Entity("EkoTwin.Models.AssessmentRecommendation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -854,61 +902,97 @@ namespace EkoTwin.Migrations
                         {
                             Id = new Guid("00000000-0000-7000-8004-000000000001"),
                             Indicator = "ERP yazılımı kullanan girişim oranı",
-                            IsVerified = false,
+                            IsVerified = true,
                             MinAnswerScore = 4,
                             Percent = 23.6m,
                             QuestionNumber = 1,
                             SimpleIndicator = "işlerini birbirine bağlı tek bir programda yürütüyor",
                             SizeClass = "Small",
-                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2025",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2025 (https://veriportali.tuik.gov.tr/tr/press/54012)",
                             Year = 2025
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-7000-8004-000000000002"),
                             Indicator = "ERP yazılımı kullanan girişim oranı",
-                            IsVerified = false,
+                            IsVerified = true,
                             MinAnswerScore = 4,
                             Percent = 46.0m,
                             QuestionNumber = 1,
                             SimpleIndicator = "işlerini birbirine bağlı tek bir programda yürütüyor",
                             SizeClass = "Medium",
-                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2025",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2025 (https://veriportali.tuik.gov.tr/tr/press/54012)",
                             Year = 2025
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-7000-8004-000000000003"),
                             Indicator = "Ücretli bulut bilişim hizmeti kullanan girişim oranı",
-                            IsVerified = false,
+                            IsVerified = true,
                             Percent = 16.7m,
                             SimpleIndicator = "programlarını internet üzerinden ücretli olarak kullanıyor",
                             SizeClass = "Small",
-                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026 (https://veriportali.tuik.gov.tr/tr/press/58021)",
                             Year = 2026
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-7000-8004-000000000004"),
                             Indicator = "Ücretli bulut bilişim hizmeti kullanan girişim oranı",
-                            IsVerified = false,
+                            IsVerified = true,
                             Percent = 33.3m,
                             SimpleIndicator = "programlarını internet üzerinden ücretli olarak kullanıyor",
                             SizeClass = "Medium",
-                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026 (https://veriportali.tuik.gov.tr/tr/press/58021)",
                             Year = 2026
                         },
                         new
                         {
                             Id = new Guid("00000000-0000-7000-8004-000000000005"),
                             Indicator = "Bilgi ve iletişim teknolojileri güvenlik önlemi alan girişim oranı",
-                            IsVerified = false,
+                            IsVerified = true,
                             MinAnswerScore = 2,
-                            Percent = 83.0m,
+                            Percent = 81.2m,
                             QuestionNumber = 3,
                             SimpleIndicator = "bilgisayarları için en az bir güvenlik önlemi alıyor",
-                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026",
+                            SizeClass = "Small",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026 (https://veriportali.tuik.gov.tr/tr/press/58021)",
                             Year = 2026
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8004-000000000006"),
+                            Indicator = "Bilgi ve iletişim teknolojileri güvenlik önlemi alan girişim oranı",
+                            IsVerified = true,
+                            MinAnswerScore = 2,
+                            Percent = 90.5m,
+                            QuestionNumber = 3,
+                            SimpleIndicator = "bilgisayarları için en az bir güvenlik önlemi alıyor",
+                            SizeClass = "Medium",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2026 (https://veriportali.tuik.gov.tr/tr/press/58021)",
+                            Year = 2026
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8004-000000000007"),
+                            Indicator = "Enerji tüketimini azaltmak için bilgi ve iletişim teknolojileri kullanan girişim oranı",
+                            IsVerified = true,
+                            Percent = 15.0m,
+                            SimpleIndicator = "enerjiyi azaltmak için yazılım veya akıllı sistem kullanıyor",
+                            SizeClass = "Small",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2025 (https://veriportali.tuik.gov.tr/tr/press/54012)",
+                            Year = 2025
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-7000-8004-000000000008"),
+                            Indicator = "Enerji tüketimini azaltmak için bilgi ve iletişim teknolojileri kullanan girişim oranı",
+                            IsVerified = true,
+                            Percent = 24.3m,
+                            SimpleIndicator = "enerjiyi azaltmak için yazılım veya akıllı sistem kullanıyor",
+                            SizeClass = "Medium",
+                            Source = "TÜİK, Girişimlerde Bilişim Teknolojileri Kullanım Araştırması, 2025 (https://veriportali.tuik.gov.tr/tr/press/54012)",
+                            Year = 2025
                         });
                 });
 
@@ -1934,6 +2018,17 @@ namespace EkoTwin.Migrations
                     b.Navigation("Assessment");
 
                     b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("EkoTwin.Models.AssessmentNarrative", b =>
+                {
+                    b.HasOne("EkoTwin.Models.Assessment", "Assessment")
+                        .WithMany()
+                        .HasForeignKey("AssessmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assessment");
                 });
 
             modelBuilder.Entity("EkoTwin.Models.AssessmentRecommendation", b =>

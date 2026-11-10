@@ -1,4 +1,5 @@
 using EkoTwin.Data;
+using EkoTwin.Services.Narrative;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,11 @@ public class ApiFactory : WebApplicationFactory<Program>
             // PostgreSQL ayarını kaldır, yerine InMemory koy
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.AddDbContext<AppDbContext>(o => o.UseInMemoryDatabase(_databaseName));
+
+            // Testler gerçek yapay zekâ servisini ASLA çağırmaz (bilgisayarda user-secrets'ta anahtar olsa bile).
+            // Varsayılan: ayarlı olmayan sahte yazıcı → kural tabanlı metin. Testler kendi sahtesini verebilir.
+            services.RemoveAll<INarrativeWriter>();
+            services.AddSingleton<INarrativeWriter>(new FakeNarrativeWriter { IsConfigured = false });
 
             ConfigureTestServices?.Invoke(services);
         });

@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<CarbonFootprintItem> CarbonFootprintItems => Set<CarbonFootprintItem>();
     public DbSet<CarbonTarget> CarbonTargets => Set<CarbonTarget>();
     public DbSet<BenchmarkReference> BenchmarkReferences => Set<BenchmarkReference>();
+    public DbSet<AssessmentNarrative> AssessmentNarratives => Set<AssessmentNarrative>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -242,6 +243,21 @@ public class AppDbContext : DbContext
             entity.HasIndex(i => new { i.CarbonFootprintId, i.Source }).IsUnique();
 
             entity.ToTable(t => t.HasCheckConstraint("CK_CarbonFootprintItems_Quantity", "\"Quantity\" >= 0"));
+        });
+
+        // ---------- AssessmentNarrative (rapor mektubu) ----------
+        modelBuilder.Entity<AssessmentNarrative>(entity =>
+        {
+            entity.Property(n => n.Id).HasDefaultValueSql("uuidv7()");
+            entity.Property(n => n.Source).HasConversion<string>().HasMaxLength(20);
+
+            // Değerlendirme silinirse mektupları da silinir.
+            entity.HasOne(n => n.Assessment)
+                  .WithMany()
+                  .HasForeignKey(n => n.AssessmentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(n => new { n.AssessmentId, n.CreatedAt });
         });
 
         // ---------- BenchmarkReference (Türkiye geneli resmi referanslar) ----------

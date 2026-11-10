@@ -103,6 +103,8 @@ dotnet run --launch-profile http
 | DELETE | `/api/carbon-footprints/{id}` | Karbon kaydını siler |
 | GET | `/api/companies/{id}/progress` | Gelişim özeti: geçmiş, son karşılaştırma, öneri takibi, karbon trendi, hedef |
 | GET | `/api/companies/{id}/benchmark` | Sektör karşılaştırması: benzer firmalara göre konum + Türkiye geneli referanslar |
+| POST | `/api/assessments/{id}/narrative` | Rapor mektubu üretir (yapay zekâ; ayarlı değilse kural tabanlı metin) |
+| GET | `/api/assessments/{id}/narrative` | En son üretilen rapor mektubu |
 | GET | `/api/assessments/{id}/compare/{otherId}` | Aynı firmanın iki değerlendirmesini karşılaştırır |
 | GET | `/api/companies/{id}/carbon-target` | Karbon azaltım hedefi ve ilerlemesi |
 | PUT | `/api/companies/{id}/carbon-target` | Hedefi oluşturur / günceller (firma başına tek hedef) |
@@ -345,6 +347,43 @@ Eşikler öneri motorunun tetikleme eşikleriyle aynıdır. A3'teki öneri snaps
 
 Kurallar: [`ProgressAnalyzer.cs`](EkoTwin/Services/ProgressAnalyzer.cs), [`CarbonTargetEvaluator.cs`](EkoTwin/Services/CarbonTargetEvaluator.cs)
 
+## Yapay zekâ rapor mektubu
+
+Değerlendirme sonuçlarını KOBİ sahibine hitap eden sade bir mektup olarak anlatır.
+**İlke: kurallar hesaplar, yapay zekâ yalnızca anlatır.**
+
+```
+Kurallar (A1-A6) → bilgi kartı (sade cümleler, firma adı YOK) → Gemini → otomatik kontrol → mektup
+                                                                        ↓ geçemezse / ayarlı değilse
+                                                              kural tabanlı şablon (her zaman doğru)
+```
+
+| Otomatik kontrol | Kural |
+|---|---|
+| Rakam | Metindeki her sayı bilgi kartında geçmeli (yapay zekâ rakam uyduramaz) |
+| Jargon | ERP, CBAM, emisyon, Kapsam 1, skor vb. yok |
+| Vaat | "kesinlikle", "garanti", hukuki kesinlik bildiren ifadeler yok |
+| Uzunluk | 80-350 kelime |
+| Okunabilirlik | Ateşman ≥ 50 |
+
+- **Gizlilik:** firma adı yapay zekâya gönderilmez; hitap ("Sayın … yetkilisi") yanıt geldikten sonra eklenir.
+- **Saklama:** her mektup kaynağı (yapay zekâ / şablon), sağlayıcı, model, talimat sürümü (`v1`) ve
+  şablona düşüldüyse nedeniyle saklanır.
+- **Sağlayıcıdan bağımsız:** `INarrativeWriter` arayüzü; bugün Gemini (`generateContent`), ileride başka model.
+- **Testler gerçek servisi çağırmaz** (sahte yazıcı); bilgisayarda anahtar tanımlı olsa bile.
+
+**Gemini ayarı** (anahtar asla repoya yazılmaz; `backend/EkoTwin` klasöründe):
+
+```
+dotnet user-secrets set "Gemini:ApiKey" "ANAHTARINIZ"
+dotnet user-secrets set "Gemini:Model" "MODEL_ADI"
+```
+
+Model adı Google'ın güncel model listesinden seçilir (adlar sık değişir). Anahtar veya model tanımlı değilse
+sistem kural tabanlı metinle çalışmaya devam eder.
+
+Kurallar: [`Services/Narrative/`](EkoTwin/Services/Narrative/)
+
 ## Sektör karşılaştırması
 
 "Benzer firmalara göre neredeyim?" sorusuna cevap verir. İki kaynak birlikte kullanılır (karışık yaklaşım):
@@ -369,12 +408,19 @@ Kullanım Araştırması (yalnızca 10+ çalışanlı firmaları kapsar; mikro f
 | Gösterge | Eşleşen cevap | 10-49 | 50-249 | Yıl |
 |---|---|---|---|---|
 | ERP kullanan girişim | Soru 1'de 4-5 | %23,6 | %46,0 | 2025 |
+| BİT güvenlik önlemi alan girişim | Soru 3'te 2+ | %81,2 | %90,5 | 2026 |
 | Ücretli bulut kullanan girişim | (yalnızca bilgi) | %16,7 | %33,3 | 2026 |
-| BİT güvenlik önlemi alan girişim | Soru 3'te 2+ | %83 (10+ geneli) | | 2026 |
+| Enerjiyi azaltmak için BİT kullanan girişim | (yalnızca bilgi) | %15,0 | %24,3 | 2025 |
 
-Enerji, karbon ve tedarik soruları için güvenilir resmi veri bulunamadı; bu sorularda yalnızca sistem içi
-karşılaştırma yapılır. **Doğrulama durumu:** değerler TÜİK bülten metnini aktaran kaynaklardan alınmıştır;
-resmi tablo teyit edilene kadar `IsVerified = false` ve kullanıcıya gösterilmez
+**Eşleşme kuralı:** tanım bizim soruyla örtüşüyorsa firmanın cevabıyla eşleştirilir ("Siz de bunlardan
+birisiniz"), örtüşmüyorsa yalnızca bilgi olarak gösterilir. Enerji göstergesi Soru 5 ile kısmen örtüştüğü
+için şimdilik yalnızca bilgi olarak gösterilir (ileride kişiselleştirilebilir).
+
+**Doğrulama:** tüm değerler 8 Kasım 2026'da TÜİK'in resmi bülten metinleriyle birebir karşılaştırıldı
+([2025](https://veriportali.tuik.gov.tr/tr/press/54012), [2026](https://veriportali.tuik.gov.tr/tr/press/58021);
+bir sonraki bülten Eylül 2027). Karbon ve tedarik soruları için uygun resmi veri yoktur; bu sorularda
+yalnızca sistem içi karşılaştırma yapılır. Yeni bir değer eklenirse resmi kaynakla teyit edilene kadar
+`IsVerified = false` tutulur ve kullanıcıya gösterilmez
 ([`BenchmarkReferenceSeed.cs`](EkoTwin/Data/BenchmarkReferenceSeed.cs)).
 
 Kurallar: [`BenchmarkCalculator.cs`](EkoTwin/Services/BenchmarkCalculator.cs)
@@ -471,6 +517,7 @@ dotnet test
 - `ProgressApiTests` – gelişim, karşılaştırma ve hedef uç noktaları uçtan uca
 - `QuestionSeedTests` – soru/seçenek yapısı, jargon yasağı, uzunluk sınırları, okunabilirlik
 - `ReadabilityTests` – Ateşman formülünün elle hesapla doğrulanması
+- `NarrativeTests` – mektup kontrolleri (uydurma sayı, jargon, vaat, uzunluk), şablona düşme, gizlilik, Gemini yanıtını okuma, uç nokta
 - `BenchmarkCalculatorTests` – grup seçimi, ortalama ve sıralama, konum eşikleri, Türkçe ekler, resmi referans kuralları
 - `BenchmarkServiceTests` – karşılaştırma servisi (en son test, en az 5 firma, karbon, doğrulama bayrağı) ve uç nokta
 - `ReportSimpleLanguageTests` – karbon, Avrupa, hedef ve gelişim raporlarının sade cümleleri; jargon taraması
